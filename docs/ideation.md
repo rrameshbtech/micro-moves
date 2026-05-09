@@ -1,4 +1,4 @@
-# Micro Breaks
+# Micro Moves
 
 This mobile app is designed to promote better health by reminding users to take small, simple exercises at periodic intervals. Whether it's for office workers who sit for long hours, elderly individuals who need gentle stretches, or anyone looking to improve their well-being, this app provides timely reminders for activities like stretching, breathing exercises, and more. The goal is to encourage users to incorporate micro breaks into their daily routine for improved health and wellness.
 

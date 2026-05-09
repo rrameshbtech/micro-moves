@@ -1,0 +1,456 @@
+<html lang="en">
+
+  <head>
+    <script>
+      window.FontAwesomeConfig = {
+        autoReplaceSvg: 'nest'
+      };
+    </script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
+      crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customize Breaks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme:
+        {
+          extend:
+          {
+            colors:
+            {
+              "border": "var(--border)",
+              "input": "var(--input)",
+              "ring": "var(--ring)",
+              "background": "var(--background)",
+              "foreground": "var(--foreground)",
+              "primary":
+              {
+                "DEFAULT": "var(--primary)",
+                "foreground": "var(--primary-foreground)",
+              },
+              "secondary":
+              {
+                "DEFAULT": "var(--secondary)",
+                "foreground": "var(--secondary-foreground)",
+              },
+              "destructive":
+              {
+                "DEFAULT": "var(--destructive)",
+                "foreground": "var(--destructive-foreground)",
+              },
+              "muted":
+              {
+                "DEFAULT": "var(--muted)",
+                "foreground": "var(--muted-foreground)",
+              },
+              "accent":
+              {
+                "DEFAULT": "var(--accent)",
+                "foreground": "var(--accent-foreground)",
+              },
+              "popover":
+              {
+                "DEFAULT": "var(--popover)",
+                "foreground": "var(--popover-foreground)",
+              },
+              "card":
+              {
+                "DEFAULT": "var(--card)",
+                "foreground": "var(--card-foreground)",
+              },
+              "sidebar":
+              {
+                "DEFAULT": "var(--sidebar)",
+                "foreground": "var(--sidebar-foreground)",
+                "primary": "var(--sidebar-primary)",
+                "primary-foreground": "var(--sidebar-primary-foreground)",
+                "accent": "var(--sidebar-accent)",
+                "accent-foreground": "var(--sidebar-accent-foreground)",
+                "border": "var(--sidebar-border)",
+                "ring": "var(--sidebar-ring)",
+              },
+              "chart":
+              {
+                "1": "var(--chart-1)",
+                "2": "var(--chart-2)",
+                "3": "var(--chart-3)",
+                "4": "var(--chart-4)",
+                "5": "var(--chart-5)",
+              },
+            },
+            "borderRadius":
+            {
+              "lg": "var(--radius)",
+              "md": "calc(var(--radius) - 2px)",
+              "sm": "calc(var(--radius) - 4px)",
+            },
+            "fontFamily":
+            {
+              "sans": ["var(--font-sans)"],
+              "serif": ["var(--font-serif)"],
+              "mono": ["var(--font-mono)"],
+            },
+            "boxShadow":
+            {
+              "2xs": "var(--shadow-2xs)",
+              "xs": "var(--shadow-xs)",
+              "sm": "var(--shadow-sm)",
+              "DEFAULT": "var(--shadow)",
+              "md": "var(--shadow-md)",
+              "lg": "var(--shadow-lg)",
+              "xl": "var(--shadow-xl)",
+              "2xl": "var(--shadow-2xl)",
+            },
+          },
+        }
+      }
+    </script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet">
+    <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+      body
+      {
+        font-family: var(--font-sans);
+        background-color: var(--background);
+        color: var(--foreground);
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      ::-webkit-scrollbar
+      {
+        display: none;
+      }
+    </style>
+    <style>
+      :root
+      {
+        --background: #F1F3F1;
+        --foreground: #717171;
+        --card: #FFFFFF;
+        --card-foreground: #2D2D2D;
+        --primary: #6A9C78;
+        --primary-foreground: #FFFFFF;
+        --secondary: #E9EFEC;
+        --secondary-foreground: #4A5D4E;
+        --muted: #F1F3F1;
+        --muted-foreground: #717171;
+        --accent: #7FA8B6;
+        --accent-foreground: #FFFFFF;
+        --destructive: #D67D7D;
+        --destructive-foreground: #FFFFFF;
+        --border: #EAECEB;
+        --input: #FFFFFF;
+        --ring: #6A9C78;
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --font-serif: Georgia, serif;
+        --font-mono: 'JetBrains Mono', monospace;
+        --radius: 16px;
+        --shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.04);
+      }
+
+      .toggle-switch
+      {
+        position: relative;
+        width: 48px;
+        height: 28px;
+        background: var(--muted);
+        border-radius: 14px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      .toggle-switch.active
+      {
+        background: var(--primary);
+      }
+
+      .toggle-knob
+      {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 22px;
+        height: 22px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .toggle-switch.active .toggle-knob
+      {
+        transform: translateX(20px);
+      }
+
+      .expanded-content
+      {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .expanded-content.open
+      {
+        max-height: 600px;
+      }
+
+      .stepper-btn
+      {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--secondary);
+        color: var(--secondary-foreground);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+      }
+
+      .stepper-btn:active
+      {
+        transform: scale(0.95);
+        background: var(--border);
+      }
+    </style>
+  </head>
+
+  <body class="m-0 p-0 flex justify-center bg-background min-h-[100dvh]">
+    <main id="app-container"
+      class="w-full max-w-[375px] bg-background relative flex flex-col h-[100dvh] mx-auto overflow-hidden shadow-2xl sm:border sm:border-border sm:rounded-[40px] sm:my-4 sm:h-[840px]">
+      <header id="header"
+        class="px-6 flex justify-between items-center z-10 bg-background pt-6 pb-3">
+        <button onclick="window.history.back()"
+          class="w-10 h-10 flex items-center justify-center text-foreground active:opacity-60 transition-opacity"><i
+            class="fa-solid fa-arrow-left text-[20px]"></i></button>
+        <h1 class="text-card-foreground font-medium tracking-tight text-[24px]">
+          Your Library
+        </h1>
+        <div class="w-10"></div>
+      </header>
+      <div id="scroll-area"
+        class="flex-1 overflow-y-auto px-6 pb-32 flex flex-col gap-4">
+        <div id="library-context" class="mb-2">
+          <p class="text-foreground text-[15px]">3 breaks in your library</p>
+        </div>
+        <div id="break-library-1"
+          class="bg-card rounded-[16px] shadow-[var(--shadow)] overflow-hidden transition-all">
+          <div onclick="toggleBreak('break1')"
+            class="p-5 flex items-center justify-between cursor-pointer">
+            <div class="flex-1">
+              <h3 class="text-card-foreground font-semibold text-[18px] mb-2">
+                Palming Eye Exercise</h3>
+              <p class="text-foreground text-[15px]">Every 2 hours</p>
+            </div>
+            <div onclick="event.stopPropagation(); toggleSwitch(this)"
+              class="toggle-switch active">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+          <div id="break1" class="expanded-content">
+            <div class="px-5 pb-5 pt-2 border-t border-border space-y-5">
+              <div><label
+                  class="text-card-foreground font-medium text-[15px] mb-3 block">Frequency</label>
+                <div class="flex items-center justify-between gap-4">
+                  <div onclick="decrementValue('freq1')" class="stepper-btn">−
+                  </div>
+                  <div class="flex-1 text-center"><span id="freq1"
+                      class="text-[32px] font-semibold text-card-foreground">2</span><span
+                      class="text-foreground text-[18px] ml-2">hours</span>
+                  </div>
+                  <div onclick="incrementValue('freq1')" class="stepper-btn">+
+                  </div>
+                </div>
+              </div>
+              <div><label
+                  class="text-card-foreground font-medium text-[15px] mb-3 block">Active
+                  Hours</label>
+                <div class="flex items-center gap-3"><input type="time"
+                    value="09:00"
+                    class="flex-1 h-[52px] px-4 bg-secondary rounded-[12px] text-card-foreground text-[16px] border-none outline-none"><span
+                    class="text-foreground text-[18px]">—</span><input
+                    type="time" value="17:00"
+                    class="flex-1 h-[52px] px-4 bg-secondary rounded-[12px] text-card-foreground text-[16px] border-none outline-none">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="break-library-2"
+          class="bg-card rounded-[16px] shadow-[var(--shadow)] overflow-hidden transition-all">
+          <div onclick="toggleBreak('break2')"
+            class="p-5 flex items-center justify-between cursor-pointer">
+            <div class="flex-1">
+              <h3 class="text-card-foreground font-semibold text-[18px] mb-2">
+                Neck Stretches</h3>
+              <p class="text-foreground text-[15px]">Every 1.5 hours</p>
+            </div>
+            <div onclick="event.stopPropagation(); toggleSwitch(this)"
+              class="toggle-switch active">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+          <div id="break2" class="expanded-content open">
+            <div class="px-5 pb-5 pt-2 border-t border-border space-y-5">
+              <div><label
+                  class="text-card-foreground font-medium text-[15px] mb-3 block">Frequency</label>
+                <div class="flex items-center justify-between gap-4">
+                  <div onclick="decrementValue('freq2')" class="stepper-btn">−
+                  </div>
+                  <div class="flex-1 text-center"><span id="freq2"
+                      class="text-[32px] font-semibold text-card-foreground">1.5</span><span
+                      class="text-foreground text-[18px] ml-2">hours</span>
+                  </div>
+                  <div onclick="incrementValue('freq2')" class="stepper-btn">+
+                  </div>
+                </div>
+              </div>
+              <div><label
+                  class="text-card-foreground font-medium text-[15px] mb-3 block">Active
+                  Hours</label>
+                <div class="flex items-center gap-3"><input type="time"
+                    value="08:00" id="ixwei"
+                    class="flex-1 h-[52px] px-4 bg-secondary rounded-[12px] text-card-foreground text-[16px] border-none outline-none w-36"><span
+                    class="text-foreground text-[18px]">—</span><input
+                    type="time" value="18:00"
+                    class="flex-1 h-[52px] px-4 bg-secondary rounded-[12px] text-card-foreground text-[16px] border-none outline-none">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="break-library-3"
+          class="bg-card rounded-[16px] shadow-[var(--shadow)] overflow-hidden transition-all">
+          <div id="break3" class="expanded-content">
+            <div class="px-5 pb-5 pt-2 border-t border-border space-y-5">
+              <div><label
+                  class="text-card-foreground font-medium text-[15px] mb-3 block">Frequency</label>
+                <div class="flex items-center justify-between gap-4">
+                  <div onclick="decrementValue('freq3')" class="stepper-btn">−
+                  </div>
+                  <div class="flex-1 text-center"><span id="freq3"
+                      class="text-[32px] font-semibold text-card-foreground">3</span><span
+                      class="text-foreground text-[18px] ml-2">hours</span>
+                  </div>
+                  <div onclick="incrementValue('freq3')" class="stepper-btn">+
+                  </div>
+                </div>
+              </div>
+              <div><label
+                  class="text-card-foreground font-medium text-[15px] mb-3 block">Active
+                  Hours</label>
+                <div class="flex items-center gap-3"><input type="time"
+                    value="09:00"
+                    class="flex-1 h-[52px] px-4 bg-secondary rounded-[12px] text-card-foreground text-[16px] border-none outline-none"><span
+                    class="text-foreground text-[18px]">—</span><input
+                    type="time" value="17:00"
+                    class="flex-1 h-[52px] px-4 bg-secondary rounded-[12px] text-card-foreground text-[16px] border-none outline-none">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="break-library-4"
+          class="bg-card rounded-[16px] shadow-[var(--shadow)] overflow-hidden transition-all opacity-60">
+          <div onclick="toggleBreak('break4')"
+            class="p-5 flex items-center justify-between cursor-pointer">
+            <div class="flex-1">
+              <h3 class="text-card-foreground font-semibold text-[18px] mb-2">
+                Shoulder Rolls</h3>
+              <p class="text-foreground text-[15px]">Every 4 hours</p>
+            </div>
+            <div onclick="event.stopPropagation(); toggleSwitch(this)"
+              class="toggle-switch">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+          <div id="break4" class="expanded-content">
+            <div class="px-5 pb-5 pt-2 border-t border-border space-y-5">
+              <div><label
+                  class="text-card-foreground font-medium text-[15px] mb-3 block">Frequency</label>
+                <div class="flex items-center justify-between gap-4">
+                  <div onclick="decrementValue('freq4')" class="stepper-btn">−
+                  </div>
+                  <div class="flex-1 text-center"><span id="freq4"
+                      class="text-[32px] font-semibold text-card-foreground">4</span><span
+                      class="text-foreground text-[18px] ml-2">hours</span>
+                  </div>
+                  <div onclick="incrementValue('freq4')" class="stepper-btn">+
+                  </div>
+                </div>
+              </div>
+              <div><label
+                  class="text-card-foreground font-medium text-[15px] mb-3 block">Active
+                  Hours</label>
+                <div class="flex items-center gap-3"><input type="time"
+                    value="09:00"
+                    class="flex-1 h-[52px] px-4 bg-secondary rounded-[12px] text-card-foreground text-[16px] border-none outline-none"><span
+                    class="text-foreground text-[18px]">—</span><input
+                    type="time" value="17:00"
+                    class="flex-1 h-[52px] px-4 bg-secondary rounded-[12px] text-card-foreground text-[16px] border-none outline-none">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="h-8"></div>
+      </div>
+      <div id="bottom-action-bar"
+        class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent pt-12 z-20">
+        <button
+          class="w-full h-[60px] bg-primary text-primary-foreground rounded-[16px] font-semibold text-[18px] shadow-[0_8px_20px_-8px_rgba(106,156,120,0.5)] active:scale-[0.98] transition-all flex items-center justify-center"><i
+            class="fa-solid fa-plus mr-2"></i>
+          Create New Break
+        </button></div>
+    </main>
+    <script>
+      function toggleBreak(id)
+      {
+        const element = document.getElementById(id);
+        element.classList.toggle('open');
+      }
+
+      function toggleSwitch(element)
+      {
+        element.classList.toggle('active');
+        const card = element.closest('.bg-card');
+        card.classList.toggle('opacity-60');
+      }
+
+      function incrementValue(id)
+      {
+        const element = document.getElementById(id);
+        let value = parseFloat(element.textContent);
+        value += 0.5;
+        if (value > 8) value = 8;
+        element.textContent = value % 1 === 0 ? value.toFixed(0) : value
+          .toFixed(1);
+      }
+
+      function decrementValue(id)
+      {
+        const element = document.getElementById(id);
+        let value = parseFloat(element.textContent);
+        value -= 0.5;
+        if (value < 0.5) value = 0.5;
+        element.textContent = value % 1 === 0 ? value.toFixed(0) : value
+          .toFixed(1);
+      }
+    </script>
+  </body>
+
+</html>

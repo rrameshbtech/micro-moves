@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+      window.FontAwesomeConfig = {
+        autoReplaceSvg: 'nest'
+      };
+    </script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
+      crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Break</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme:
+        {
+          extend:
+          {
+            colors:
+            {
+              "border": "var(--border)",
+              "input": "var(--input)",
+              "ring": "var(--ring)",
+              "background": "var(--background)",
+              "foreground": "var(--foreground)",
+              "primary":
+              {
+                "DEFAULT": "var(--primary)",
+                "foreground": "var(--primary-foreground)",
+              },
+              "secondary":
+              {
+                "DEFAULT": "var(--secondary)",
+                "foreground": "var(--secondary-foreground)",
+              },
+              "destructive":
+              {
+                "DEFAULT": "var(--destructive)",
+                "foreground": "var(--destructive-foreground)",
+              },
+              "muted":
+              {
+                "DEFAULT": "var(--muted)",
+                "foreground": "var(--muted-foreground)",
+              },
+              "accent":
+              {
+                "DEFAULT": "var(--accent)",
+                "foreground": "var(--accent-foreground)",
+              },
+              "popover":
+              {
+                "DEFAULT": "var(--popover)",
+                "foreground": "var(--popover-foreground)",
+              },
+              "card":
+              {
+                "DEFAULT": "var(--card)",
+                "foreground": "var(--card-foreground)",
+              },
+            },
+            "borderRadius":
+            {
+              "lg": "var(--radius)",
+              "md": "calc(var(--radius) - 2px)",
+              "sm": "calc(var(--radius) - 4px)",
+            },
+            "fontFamily":
+            {
+              "sans": ["var(--font-sans)"],
+            },
+            "boxShadow":
+            {
+              "DEFAULT": "var(--shadow)",
+            },
+          },
+        }
+      }
+    </script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet">
+    <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+      body
+      {
+        font-family: var(--font-sans);
+        background-color: var(--background);
+        color: var(--foreground);
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      ::-webkit-scrollbar
+      {
+        display: none;
+      }
+    </style>
+    <style>
+      :root
+      {
+        --background: #F1F3F1;
+        --foreground: #717171;
+        --card: #FFFFFF;
+        --card-foreground: #2D2D2D;
+        --primary: #6A9C78;
+        --primary-foreground: #FFFFFF;
+        --secondary: #E9EFEC;
+        --secondary-foreground: #4A5D4E;
+        --muted: #F1F3F1;
+        --muted-foreground: #717171;
+        --accent: #7FA8B6;
+        --accent-foreground: #FFFFFF;
+        --destructive: #D67D7D;
+        --destructive-foreground: #FFFFFF;
+        --border: #EAECEB;
+        --input: #FFFFFF;
+        --ring: #6A9C78;
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --radius: 16px;
+        --shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.04);
+      }
+
+      @keyframes progressFill {
+        from { width: 0%; }
+        to { width: 100%; }
+      }
+
+      .progress-bar-fill {
+        animation: progressFill 20s linear forwards;
+      }
+
+      @keyframes holdFill {
+        from { 
+          background: conic-gradient(var(--primary) 0deg, transparent 0deg);
+        }
+        to { 
+          background: conic-gradient(var(--primary) 360deg, transparent 360deg);
+        }
+      }
+
+      .hold-circle {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+      }
+
+      .hold-circle::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: conic-gradient(var(--primary) 0deg, transparent 0deg);
+        mask: radial-gradient(circle, transparent 70%, black 70%);
+        -webkit-mask: radial-gradient(circle, transparent 70%, black 70%);
+      }
+
+      .hold-circle.active::before {
+        animation: holdFill 2s linear forwards;
+      }
+
+      .hold-circle-inner {
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: var(--background);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--primary);
+      }
+    </style>
+  </head>
+
+  <body class="m-0 p-0 flex justify-center bg-background min-h-[100dvh]">
+    <main id="app-container"
+      class="w-full max-w-[375px] bg-background relative flex flex-col h-[100dvh] mx-auto overflow-hidden shadow-2xl sm:border sm:border-border sm:rounded-[40px] sm:my-4 sm:h-[840px]">
+      
+      <div id="progress-bar-container" class="w-full h-1 bg-secondary relative z-20">
+        <div id="progress-bar-fill" class="h-full bg-primary progress-bar-fill"></div>
+      </div>
+
+      <div id="immersive-content" class="flex-1 flex flex-col items-center justify-center px-6 relative">
+        
+        <div id="exercise-visual" class="w-full max-w-[320px] mb-12 relative">
+          <div class="w-full aspect-square rounded-[24px] overflow-hidden bg-secondary shadow-[var(--shadow)]">
+            <img 
+              class="w-full h-full object-cover"
+              src="https://storage.googleapis.com/uxpilot-auth.appspot.com/9e7e76e2c5-4dc28a1387b53a3358d9.png" alt="person slowly rotating shoulders in circular motion, medical illustration style, minimalist, clean lines, soft pastel colors, anatomically accurate, peaceful expression" />
+          </div>
+        </div>
+
+        <div id="instruction-text" class="w-full text-center px-4 mb-8">
+          <h1 class="text-card-foreground text-[28px] sm:text-[32px] font-semibold leading-tight tracking-tight">
+            Slowly rotate your shoulders
+          </h1>
+          <p class="text-foreground text-[16px] sm:text-[18px] mt-3 leading-relaxed">
+            Make gentle circles, forward then backward
+          </p>
+        </div>
+
+        <div id="timer-display" class="text-center mb-6">
+          <div class="text-primary text-[56px] sm:text-[64px] font-bold tracking-tight" id="countdown">
+            0:20
+          </div>
+        </div>
+
+      </div>
+
+      <div id="bottom-controls" class="absolute bottom-0 left-0 right-0 p-6 pb-8 bg-gradient-to-t from-background via-background to-transparent z-20">
+        
+        <div id="skip-button-container" class="flex flex-col items-center gap-3">
+          <div class="hold-circle" id="hold-circle">
+            <div class="hold-circle-inner">
+              <i class="fa-solid fa-forward text-primary text-[20px]"></i>
+            </div>
+          </div>
+          
+          <button 
+            id="skip-button"
+            class="px-6 py-3 rounded-[12px] bg-transparent text-muted-foreground text-[15px] font-medium active:opacity-60 transition-opacity"
+            onmousedown="startHold()"
+            onmouseup="cancelHold()"
+            onmouseleave="cancelHold()"
+            ontouchstart="startHold()"
+            ontouchend="cancelHold()"
+            ontouchcancel="cancelHold()">
+            Hold to Skip
+          </button>
+        </div>
+
+      </div>
+
+    </main>
+
+    <script>
+      let holdTimer;
+      let countdownTimer;
+      let secondsRemaining = 20;
+
+      function startCountdown() {
+        countdownTimer = setInterval(() => {
+          secondsRemaining--;
+          const minutes = Math.floor(secondsRemaining / 60);
+          const seconds = secondsRemaining % 60;
+          document.getElementById('countdown').textContent = 
+            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          
+          if (secondsRemaining <= 0) {
+            clearInterval(countdownTimer);
+          }
+        }, 1000);
+      }
+
+      function startHold() {
+        const circle = document.getElementById('hold-circle');
+        circle.classList.add('active');
+        
+        holdTimer = setTimeout(() => {
+          skipExercise();
+        }, 2000);
+      }
+
+      function cancelHold() {
+        const circle = document.getElementById('hold-circle');
+        circle.classList.remove('active');
+        
+        if (holdTimer) {
+          clearTimeout(holdTimer);
+          holdTimer = null;
+        }
+      }
+
+      function skipExercise() {
+        clearInterval(countdownTimer);
+        if (holdTimer) {
+          clearTimeout(holdTimer);
+        }
+      }
+
+      window.addEventListener('load', function() {
+        startCountdown();
+      });
+    </script>
+  </body>
+</html>

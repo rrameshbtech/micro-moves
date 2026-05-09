@@ -1,4 +1,4 @@
-# Design Context: Pausify (The Wellness Extension)
+# Design Context: Micro Moves (The Wellness Extension)
 
 **The Mission**: A minimalist health utility designed as a "soft companion" for office workers and the elderly. It bridges the gap between sedentary work and physical well-being through quiet, periodic exercise reminders.
 **The Philosophy**: Inspired by Dieter Rams' "Less, but better." No decoration—only utility. The interface should feel like a physical, tactile object that lives on the phone.
@@ -9,7 +9,7 @@
 # Screen Instruction: Dashboard (Breaks List)
 
 ## 1. Scene Composition
-* **Header**: Place the name "Pausify" in the top-left using `--foreground`. The font weight should be medium, and the size should be subtle (around 20pt). No icons in the header.
+* **Header**: Place the name "Micro Moves" in the top-left using `--foreground`. The font weight should be medium, and the size should be subtle (around 20pt). No icons in the header.
 * **Main List**: A vertical scrollable area containing **Break Cards**.
 * **Bottom Anchor**: A fixed primary button at the very bottom of the screen labeled "Manage Breaks" (Width: 100% minus padding, Height: 60px). Use `--primary` background and `--primary-foreground`.
 

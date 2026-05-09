@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+      window.FontAwesomeConfig = {
+        autoReplaceSvg: 'nest'
+      };
+    </script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
+      crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme:
+        {
+          extend:
+          {
+            colors:
+            {
+              "border": "var(--border)",
+              "input": "var(--input)",
+              "ring": "var(--ring)",
+              "background": "var(--background)",
+              "foreground": "var(--foreground)",
+              "primary":
+              {
+                "DEFAULT": "var(--primary)",
+                "foreground": "var(--primary-foreground)",
+              },
+              "secondary":
+              {
+                "DEFAULT": "var(--secondary)",
+                "foreground": "var(--secondary-foreground)",
+              },
+              "destructive":
+              {
+                "DEFAULT": "var(--destructive)",
+                "foreground": "var(--destructive-foreground)",
+              },
+              "muted":
+              {
+                "DEFAULT": "var(--muted)",
+                "foreground": "var(--muted-foreground)",
+              },
+              "accent":
+              {
+                "DEFAULT": "var(--accent)",
+                "foreground": "var(--accent-foreground)",
+              },
+              "popover":
+              {
+                "DEFAULT": "var(--popover)",
+                "foreground": "var(--popover-foreground)",
+              },
+              "card":
+              {
+                "DEFAULT": "var(--card)",
+                "foreground": "var(--card-foreground)",
+              },
+            },
+            "borderRadius":
+            {
+              "lg": "var(--radius)",
+              "md": "calc(var(--radius) - 2px)",
+              "sm": "calc(var(--radius) - 4px)",
+            },
+            "fontFamily":
+            {
+              "sans": ["var(--font-sans)"],
+            },
+            "boxShadow":
+            {
+              "DEFAULT": "var(--shadow)",
+            },
+          },
+        }
+      }
+    </script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet">
+    <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+      body
+      {
+        font-family: var(--font-sans);
+        background-color: var(--background);
+        color: var(--foreground);
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      ::-webkit-scrollbar
+      {
+        display: none;
+      }
+    </style>
+    <style>
+      :root
+      {
+        --background: #F1F3F1;
+        --foreground: #717171;
+        --card: #FFFFFF;
+        --card-foreground: #2D2D2D;
+        --primary: #6A9C78;
+        --primary-foreground: #FFFFFF;
+        --secondary: #E9EFEC;
+        --secondary-foreground: #4A5D4E;
+        --muted: #F1F3F1;
+        --muted-foreground: #717171;
+        --accent: #7FA8B6;
+        --accent-foreground: #FFFFFF;
+        --destructive: #D67D7D;
+        --destructive-foreground: #FFFFFF;
+        --border: #EAECEB;
+        --input: #FFFFFF;
+        --ring: #6A9C78;
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --radius: 16px;
+        --shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.04);
+      }
+
+      .circular-progress {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+      }
+
+      .circular-progress::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: conic-gradient(var(--primary) 85%, var(--muted) 0);
+        mask: radial-gradient(circle, transparent 65%, black 65%);
+        -webkit-mask: radial-gradient(circle, transparent 65%, black 65%);
+      }
+
+      .circular-progress-inner {
+        position: absolute;
+        inset: 16px;
+        border-radius: 50%;
+        background: var(--card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .weekly-bar {
+        width: 20px;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .weekly-bar:hover {
+        transform: scale(1.05);
+      }
+
+      .weekly-bar.completed {
+        background: var(--primary);
+        height: 60px;
+      }
+
+      .weekly-bar.incomplete {
+        background: var(--muted);
+        height: 20px;
+      }
+
+      .weekly-bar.today {
+        border: 2px solid var(--accent);
+        position: relative;
+      }
+
+      .weekly-bar.today::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 6px;
+        height: 6px;
+        background: var(--accent);
+        border-radius: 50%;
+      }
+
+      .segmented-control {
+        display: flex;
+        background: var(--secondary);
+        border-radius: 12px;
+        padding: 4px;
+        position: relative;
+      }
+
+      .segmented-option {
+        flex: 1;
+        padding: 12px 20px;
+        text-align: center;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 2;
+      }
+
+      .segmented-option.active {
+        background: var(--card);
+        color: var(--card-foreground);
+        box-shadow: var(--shadow);
+      }
+
+      .segmented-option:not(.active) {
+        color: var(--muted-foreground);
+      }
+
+      .tooltip {
+        position: absolute;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        z-index: 10;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        pointer-events: none;
+      }
+
+      .tooltip.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+
+  <body class="m-0 p-0 flex justify-center bg-background min-h-[100dvh]">
+    <main id="app-container"
+      class="w-full max-w-[375px] bg-background relative flex flex-col h-[100dvh] mx-auto overflow-hidden shadow-2xl sm:border sm:border-border sm:rounded-[40px] sm:my-4 sm:h-[840px]">
+      
+      <header id="header" class="px-6 pt-12 pb-6">
+        <h1 class="text-foreground text-[24px] font-medium text-center">Weekly Progress</h1>
+      </header>
+
+      <div id="segmented-control-container" class="px-6 mb-8">
+        <div class="segmented-control">
+          <div class="segmented-option active" onclick="switchWeek('this')">This Week</div>
+          <div class="segmented-option" onclick="switchWeek('last')">Last Week</div>
+        </div>
+      </div>
+
+      <div id="score-card-container" class="px-6 mb-10">
+        <div class="bg-card rounded-[var(--radius)] p-10 shadow-[var(--shadow)] flex flex-col items-center">
+          <div class="circular-progress mb-4">
+            <div class="circular-progress-inner">
+              <div class="text-center">
+                <div class="text-card-foreground text-[56px] font-bold leading-none">85</div>
+                <div class="text-muted-foreground text-[14px] mt-1">Discipline Score</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="weekly-activity-container" class="px-6 mb-8">
+        <h2 class="text-card-foreground text-[18px] font-medium mb-4">Weekly Activity</h2>
+        <div class="bg-card rounded-[var(--radius)] p-6 shadow-[var(--shadow)]">
+          <div class="flex justify-between items-end mb-4 relative">
+            <div class="flex flex-col items-center gap-2">
+              <div class="weekly-bar completed" onclick="showTooltip(event, '6/8 Breaks')"></div>
+              <span class="text-muted-foreground text-[12px]">M</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="weekly-bar completed" onclick="showTooltip(event, '8/8 Breaks')"></div>
+              <span class="text-muted-foreground text-[12px]">T</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="weekly-bar today completed" onclick="showTooltip(event, '7/8 Breaks')"></div>
+              <span class="text-muted-foreground text-[12px]">W</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="weekly-bar incomplete" onclick="showTooltip(event, '2/8 Breaks')"></div>
+              <span class="text-muted-foreground text-[12px]">T</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="weekly-bar completed" onclick="showTooltip(event, '8/8 Breaks')"></div>
+              <span class="text-muted-foreground text-[12px]">F</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="weekly-bar incomplete" onclick="showTooltip(event, '3/8 Breaks')"></div>
+              <span class="text-muted-foreground text-[12px]">S</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="weekly-bar completed" onclick="showTooltip(event, '5/8 Breaks')"></div>
+              <span class="text-muted-foreground text-[12px]">S</span>
+            </div>
+            <div class="tooltip" id="tooltip"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="health-impact-container" class="px-6 pb-8">
+        <h2 class="text-card-foreground text-[18px] font-medium mb-4">Health Impact</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-secondary rounded-[var(--radius)] p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-person-walking text-primary-foreground text-[16px]"></i>
+              </div>
+              <div>
+                <div class="text-secondary-foreground text-[18px] font-semibold">+12%</div>
+                <div class="text-muted-foreground text-[12px]">Flexibility</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-secondary rounded-[var(--radius)] p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-eye text-primary-foreground text-[16px]"></i>
+              </div>
+              <div>
+                <div class="text-secondary-foreground text-[14px] font-semibold">Focus</div>
+                <div class="text-secondary-foreground text-[14px] font-semibold">Restored</div>
+                <div class="text-muted-foreground text-[12px]">120 min rest</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <script>
+      function switchWeek(week) {
+        const options = document.querySelectorAll('.segmented-option');
+        options.forEach(option => option.classList.remove('active'));
+        
+        if (week === 'this') {
+          options[0].classList.add('active');
+        } else {
+          options[1].classList.add('active');
+        }
+      }
+
+      function showTooltip(event, text) {
+        const tooltip = document.getElementById('tooltip');
+        const rect = event.target.getBoundingClientRect();
+        const container = document.getElementById('weekly-activity-container');
+        const containerRect = container.getBoundingClientRect();
+        
+        tooltip.textContent = text;
+        tooltip.style.left = (rect.left - containerRect.left + rect.width / 2) + 'px';
+        tooltip.style.top = (rect.top - containerRect.top - 40) + 'px';
+        tooltip.style.transform = 'translateX(-50%)';
+        tooltip.classList.add('show');
+        
+        setTimeout(() => {
+          tooltip.classList.remove('show');
+        }, 2000);
+      }
+    </script>
+  </body>
+</html>

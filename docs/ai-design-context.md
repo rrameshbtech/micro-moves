@@ -1,4 +1,4 @@
-# AI Design System Instructions: Micro Breaks (Pausify)
+# AI Design System Instructions: Micro Moves
 
 ## 1. Design Philosophy & Persona
 

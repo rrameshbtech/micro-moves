@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+      window.FontAwesomeConfig = {
+        autoReplaceSvg: 'nest'
+      };
+    </script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
+      crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Break</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme:
+        {
+          extend:
+          {
+            colors:
+            {
+              "border": "var(--border)",
+              "input": "var(--input)",
+              "ring": "var(--ring)",
+              "background": "var(--background)",
+              "foreground": "var(--foreground)",
+              "primary":
+              {
+                "DEFAULT": "var(--primary)",
+                "foreground": "var(--primary-foreground)",
+              },
+              "secondary":
+              {
+                "DEFAULT": "var(--secondary)",
+                "foreground": "var(--secondary-foreground)",
+              },
+              "destructive":
+              {
+                "DEFAULT": "var(--destructive)",
+                "foreground": "var(--destructive-foreground)",
+              },
+              "muted":
+              {
+                "DEFAULT": "var(--muted)",
+                "foreground": "var(--muted-foreground)",
+              },
+              "accent":
+              {
+                "DEFAULT": "var(--accent)",
+                "foreground": "var(--accent-foreground)",
+              },
+              "popover":
+              {
+                "DEFAULT": "var(--popover)",
+                "foreground": "var(--popover-foreground)",
+              },
+              "card":
+              {
+                "DEFAULT": "var(--card)",
+                "foreground": "var(--card-foreground)",
+              },
+            },
+            "borderRadius":
+            {
+              "lg": "var(--radius)",
+              "md": "calc(var(--radius) - 2px)",
+              "sm": "calc(var(--radius) - 4px)",
+            },
+            "fontFamily":
+            {
+              "sans": ["var(--font-sans)"],
+            },
+            "boxShadow":
+            {
+              "DEFAULT": "var(--shadow)",
+            },
+          },
+        }
+      }
+    </script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet">
+    <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+      body
+      {
+        font-family: var(--font-sans);
+        background-color: var(--background);
+        color: var(--foreground);
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      ::-webkit-scrollbar
+      {
+        display: none;
+      }
+    </style>
+    <style>
+      :root
+      {
+        --background: #F1F3F1;
+        --foreground: #717171;
+        --card: #FFFFFF;
+        --card-foreground: #2D2D2D;
+        --primary: #6A9C78;
+        --primary-foreground: #FFFFFF;
+        --secondary: #E9EFEC;
+        --secondary-foreground: #4A5D4E;
+        --muted: #F1F3F1;
+        --muted-foreground: #717171;
+        --accent: #7FA8B6;
+        --accent-foreground: #FFFFFF;
+        --destructive: #D67D7D;
+        --destructive-foreground: #FFFFFF;
+        --border: #EAECEB;
+        --input: #FFFFFF;
+        --ring: #6A9C78;
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --radius: 16px;
+        --shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.04);
+      }
+
+      .chip {
+        padding: 12px 20px;
+        border-radius: 24px;
+        background: var(--secondary);
+        color: var(--secondary-foreground);
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+        user-select: none;
+      }
+
+      .chip.active {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        border-color: var(--primary);
+      }
+
+      .chip:active {
+        transform: scale(0.96);
+      }
+
+      .add-step-placeholder {
+        border: 2px dashed var(--muted-foreground);
+        background: var(--muted);
+        border-radius: 16px;
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .add-step-placeholder:active {
+        transform: scale(0.98);
+        background: var(--secondary);
+      }
+
+      .step-thumbnail {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: var(--secondary);
+      }
+    </style>
+  </head>
+
+  <body class="m-0 p-0 flex justify-center bg-background min-h-[100dvh]">
+    <main id="app-container"
+      class="w-full max-w-[375px] bg-background relative flex flex-col h-[100dvh] mx-auto overflow-hidden shadow-2xl sm:border sm:border-border sm:rounded-[40px] sm:my-4 sm:h-[840px]">
+      
+      <header id="header"
+        class="px-6 flex justify-between items-center z-10 bg-background pt-6 pb-3">
+        <button class="w-10 h-10 flex items-center justify-center text-foreground active:opacity-60 transition-opacity" onclick="window.history.back()">
+          <i class="fa-solid fa-arrow-left text-[20px]"></i>
+        </button>
+        <h1 class="text-card-foreground font-medium tracking-tight text-[24px]">
+          New Break
+        </h1>
+        <div class="w-10"></div>
+      </header>
+
+      <div id="scroll-area"
+        class="flex-1 overflow-y-auto px-6 pb-32 flex flex-col gap-6">
+        
+        <section id="meta-data-section" class="mt-2">
+          <div class="space-y-4">
+            <div>
+              <label class="text-card-foreground font-medium text-[15px] mb-2 block">Name</label>
+              <input type="text" placeholder="e.g., Eye Relief Exercise" 
+                class="w-full h-[52px] px-4 bg-input rounded-[12px] text-card-foreground text-[16px] border border-border outline-none focus:border-primary transition-colors">
+            </div>
+            
+            <div>
+              <label class="text-card-foreground font-medium text-[15px] mb-2 block">Goal / Description</label>
+              <textarea placeholder="What does this break help with?" rows="3"
+                class="w-full px-4 py-3 bg-input rounded-[12px] text-card-foreground text-[16px] border border-border outline-none focus:border-primary transition-colors resize-none"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section id="slide-builder-section">
+          <div class="mb-4">
+            <h2 class="text-card-foreground font-semibold text-[18px]">Exercise Steps</h2>
+            <p class="text-foreground text-[14px] mt-1">Build the visual deck for your break</p>
+          </div>
+
+          <div id="step-1-filled" class="bg-card rounded-[16px] shadow-[var(--shadow)] p-5 mb-4">
+            <div class="flex gap-4 mb-4">
+              <div class="step-thumbnail flex-shrink-0">
+                <img class="w-full h-full rounded-[12px] object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/ad951d9b94-6ca1986d186b721ca78f.png" alt="person covering eyes with palms, medical illustration style, minimalist, soft lighting" />
+              </div>
+              <div class="flex-1">
+                <div class="text-muted-foreground text-[13px] font-medium mb-1">STEP 1</div>
+                <input type="text" value="Look away from screen" 
+                  class="w-full h-[44px] px-3 bg-secondary rounded-[10px] text-card-foreground text-[15px] border-none outline-none">
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between pt-3 border-t border-border">
+              <span class="text-foreground text-[14px]">Duration</span>
+              <div class="flex items-center gap-3">
+                <button class="w-9 h-9 rounded-[8px] bg-secondary text-secondary-foreground flex items-center justify-center text-[18px] font-semibold active:scale-95 transition-transform" onclick="adjustDuration('step1', -5)">−</button>
+                <span id="step1-duration" class="text-card-foreground font-semibold text-[20px] min-w-[48px] text-center">20s</span>
+                <button class="w-9 h-9 rounded-[8px] bg-secondary text-secondary-foreground flex items-center justify-center text-[18px] font-semibold active:scale-95 transition-transform" onclick="adjustDuration('step1', 5)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="step-2-empty" class="add-step-placeholder">
+            <div class="text-center">
+              <i class="fa-solid fa-plus text-[40px] text-muted-foreground mb-2"></i>
+              <p class="text-muted-foreground text-[15px] font-medium">Add Step</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="trigger-pattern-section" class="mt-2">
+          <div class="mb-3">
+            <h2 class="text-card-foreground font-semibold text-[18px]">Trigger Pattern</h2>
+            <p class="text-foreground text-[14px] mt-1">How should we notify you?</p>
+          </div>
+
+          <div class="flex gap-3 flex-wrap">
+            <div class="chip active" onclick="selectChip(this)">
+              <i class="fa-solid fa-bell mr-2"></i>Beep
+            </div>
+            <div class="chip" onclick="selectChip(this)">
+              <i class="fa-solid fa-eye mr-2"></i>Blink
+            </div>
+            <div class="chip" onclick="selectChip(this)">
+              <i class="fa-solid fa-phone mr-2"></i>Ring
+            </div>
+          </div>
+        </section>
+
+        <div class="h-8"></div>
+      </div>
+
+      <div id="bottom-action-bar"
+        class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent pt-12 z-20">
+        <button
+          class="w-full h-[60px] bg-primary text-primary-foreground rounded-[16px] font-semibold text-[18px] shadow-[0_8px_20px_-8px_rgba(106,156,120,0.5)] active:scale-[0.98] transition-all flex items-center justify-center">
+          Save Break
+        </button>
+      </div>
+    </main>
+
+    <script>
+      function selectChip(element) {
+        document.querySelectorAll('.chip').forEach(chip => {
+          chip.classList.remove('active');
+        });
+        element.classList.add('active');
+      }
+
+      function adjustDuration(stepId, change) {
+        const element = document.getElementById(stepId + '-duration');
+        let currentValue = parseInt(element.textContent);
+        let newValue = currentValue + change;
+        
+        if (newValue < 5) newValue = 5;
+        if (newValue > 120) newValue = 120;
+        
+        element.textContent = newValue + 's';
+      }
+    </script>
+  </body>
+</html>
