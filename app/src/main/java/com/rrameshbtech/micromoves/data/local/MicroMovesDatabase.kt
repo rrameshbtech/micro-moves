@@ -5,16 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.rrameshbtech.micromoves.data.ActiveBreak
 import com.rrameshbtech.micromoves.data.Break
-import com.rrameshbtech.micromoves.data.Slide
 
-/**
- * Room Database for MicroMoves.
- * Central database container for all break-related entities.
- */
 @Database(
-    entities = [Break::class, Slide::class, ActiveBreak::class],
+    entities = [Break::class],
     version = 1,
     exportSchema = true
 )
@@ -22,8 +16,6 @@ import com.rrameshbtech.micromoves.data.Slide
 abstract class MicroMovesDatabase : RoomDatabase() {
 
     abstract fun breakDao(): BreakDao
-    abstract fun slideDao(): SlideDao
-    abstract fun activeBreakDao(): ActiveBreakDao
 
     companion object {
         @Volatile
