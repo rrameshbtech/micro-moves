@@ -24,6 +24,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rrameshbtech.micromoves.data.Break
 import com.rrameshbtech.micromoves.data.BreakState
 import com.rrameshbtech.micromoves.ui.theme.BackgroundLight
@@ -46,17 +49,22 @@ import com.rrameshbtech.micromoves.ui.theme.PrimaryLight
 import com.rrameshbtech.micromoves.ui.theme.PrimaryForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.SecondaryForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.SecondaryLight
+import com.rrameshbtech.micromoves.viewmodel.BreaksListViewModel
 
 @Composable
-fun BreaksListScreen(modifier: Modifier = Modifier) {
-    val now = System.currentTimeMillis()
-    val mockBreaks = listOf(
-        Break(id = 1, name = "Palming Eye Exercise", state = BreakState.Active, nextTriggerTime = now + 15 * 60_000L),
-        Break(id = 2, name = "Neck Stretches", state = BreakState.Active, nextTriggerTime = now + 45 * 60_000L),
-        Break(id = 3, name = "Stand & Walk", state = BreakState.Active, nextTriggerTime = now + 120 * 60_000L),
-        Break(id = 4, name = "Shoulder Rolls", state = BreakState.PausedForOccurrence(occurrences = 2)),
-    )
+fun BreaksListScreen(
+    viewModel: BreaksListViewModel = viewModel(),
+    modifier: Modifier = Modifier,
+) {
+    val breaks by viewModel.breaks.collectAsState()
+    BreaksListContent(breaks = breaks, modifier = modifier)
+}
 
+@Composable
+private fun BreaksListContent(
+    breaks: List<Break>,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier = modifier
             .fillMaxSize()
@@ -118,14 +126,14 @@ fun BreaksListScreen(modifier: Modifier = Modifier) {
         ) {
             item {
                 Text(
-                    text = "${mockBreaks.size} breaks scheduled",
+                    text = "${breaks.size} breaks scheduled",
                     fontSize = 15.sp,
                     color = ForegroundLight,
                     modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
                 )
             }
 
-            items(mockBreaks) { breakItem ->
+            items(breaks) { breakItem ->
                 when (breakItem.state) {
                     is BreakState.Active -> ActiveBreakCard(breakItem = breakItem)
                     is BreakState.Paused,
@@ -296,8 +304,16 @@ fun PausedBreakCard(
 
 @Preview(showBackground = true, backgroundColor = 0xFFF1F3F1)
 @Composable
-fun BreaksListScreenPreview() {
+private fun BreaksListScreenPreview() {
+    val now = System.currentTimeMillis()
     MicroMovesTheme {
-        BreaksListScreen()
+        BreaksListContent(
+            breaks = listOf(
+                Break(id = 1, name = "Palming Eye Exercise", state = BreakState.Active, nextTriggerTime = now + 15 * 60_000L),
+                Break(id = 2, name = "Neck Stretches", state = BreakState.Active, nextTriggerTime = now + 45 * 60_000L),
+                Break(id = 3, name = "Stand & Walk", state = BreakState.Active, nextTriggerTime = now + 120 * 60_000L),
+                Break(id = 4, name = "Shoulder Rolls", state = BreakState.PausedForOccurrence(occurrences = 2)),
+            )
+        )
     }
 }
