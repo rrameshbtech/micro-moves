@@ -5,7 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.rrameshbtech.micromoves.data.Break
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Database(
     entities = [Break::class],
@@ -29,12 +33,22 @@ abstract class MicroMovesDatabase : RoomDatabase() {
                     "micromoves_database"
                 )
                     .fallbackToDestructiveMigration()
+                    .addCallback(SeedCallback(context.applicationContext))
                     .build()
                 INSTANCE = instance
                 instance
             }
         }
     }
+
+    private class SeedCallback(private val context: Context) : RoomDatabase.Callback() {
+        override fun onCreate(db: SupportSQLiteDatabase) {
+            super.onCreate(db)
+            CoroutineScope(Dispatchers.IO).launch {
+                INSTANCE?.breakDao()?.let { dao ->
+                    DatabaseSeeder.seed(context, dao)
+                }
+            }
+        }
+    }
 }
-
-
