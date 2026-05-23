@@ -75,6 +75,11 @@ app/src/main/
 
 ## Architecture Patterns
 
+### Core Tech Principles
+- Follow Domain-Driven Design (DDD) principles: separate domain logic from Android framework dependencies.
+- Use `ViewModel` for UI state management and business logic.
+- Use `StateFlow` for reactive UI updates and `SharedFlow` for one-time events
+
 ### Two-Tier Screen Hierarchy
 Planned screens follow a primary flow:
 1. **Breaks List (Dashboard)**: Shows active breaks with countdown timers + Pause/Resume CTAs.
@@ -95,18 +100,14 @@ fun BreaksListScreenPreview() { ... }
 ```
 
 ### Data Model (Implied from Ideation)
-**Break** object should contain:
-- `name` (string)
-- `description` (string explaining health benefit)
-- `frequency` (interval in minutes)
-- `activeTimeRange` (start/end hours)
-- `enabled` (boolean)
-- `slides` (list of exercise steps)
-
-**Slide** object should contain:
-- `instructionText` (string)
-- `imageUri` (optional, for pictures of exercise pose)
-- `durationMs` (milliseconds to display)
+#### Base model hierarchy
+Slide ->  image URI, time-to-show, description
+Exercise -> Name, description, List<Slide>, total duration (derived from slides)
+RoutineStep -> Exercise, pauseAfterMs (boolean)
+BreakRoutine -> List<RoutineStep>, total duration (derived)
+BreakState -> Active, Paused, PausedForOccurrence
+BreakSchedule -> Frequency (e.g. every 30 mins), Time Range (e.g. 9am-5pm), Trigger Type (e.g. exact alarm)
+Break -> name, BreakSchedule, BreakRoutine, BreakState, nextTriggerTime (derived from schedule + state)
 
 ## Theme & Styling Constants (`Theme.kt` & `Color.kt`)
 
