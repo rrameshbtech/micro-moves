@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rrameshbtech.micromoves.data.Break
+import com.rrameshbtech.micromoves.data.BreakState
 import com.rrameshbtech.micromoves.ui.theme.BackgroundLight
 import com.rrameshbtech.micromoves.ui.theme.BorderLight
 import com.rrameshbtech.micromoves.ui.theme.CardForegroundLight
@@ -48,36 +49,12 @@ import com.rrameshbtech.micromoves.ui.theme.SecondaryLight
 
 @Composable
 fun BreaksListScreen(modifier: Modifier = Modifier) {
+    val now = System.currentTimeMillis()
     val mockBreaks = listOf(
-        Break(
-            id = 1,
-            name = "Palming Eye Exercise",
-            description = "Rest your eyes and reduce strain",
-            enabled = true,
-            minutesUntilNext = 15,
-        ),
-        Break(
-            id = 2,
-            name = "Neck Stretches",
-            description = "Relieve neck tension",
-            enabled = true,
-            minutesUntilNext = 45,
-        ),
-        Break(
-            id = 3,
-            name = "Stand & Walk",
-            description = "Get up and move around",
-            enabled = true,
-            minutesUntilNext = 120,
-        ),
-        Break(
-            id = 4,
-            name = "Shoulder Rolls",
-            description = "Ease shoulder tension",
-            enabled = false,
-            isPaused = true,
-            pausedForCycles = 2,
-        )
+        Break(id = 1, name = "Palming Eye Exercise", state = BreakState.Active, nextTriggerTime = now + 15 * 60_000L),
+        Break(id = 2, name = "Neck Stretches", state = BreakState.Active, nextTriggerTime = now + 45 * 60_000L),
+        Break(id = 3, name = "Stand & Walk", state = BreakState.Active, nextTriggerTime = now + 120 * 60_000L),
+        Break(id = 4, name = "Shoulder Rolls", state = BreakState.PausedForOccurrence(occurrences = 2)),
     )
 
     Scaffold(
@@ -149,10 +126,10 @@ fun BreaksListScreen(modifier: Modifier = Modifier) {
             }
 
             items(mockBreaks) { breakItem ->
-                if (breakItem.isPaused) {
-                    PausedBreakCard(breakItem)
-                } else {
-                    ActiveBreakCard(breakItem = breakItem)
+                when (breakItem.state) {
+                    is BreakState.Active -> ActiveBreakCard(breakItem = breakItem)
+                    is BreakState.Paused,
+                    is BreakState.PausedForOccurrence -> PausedBreakCard(breakItem)
                 }
             }
 
@@ -179,6 +156,8 @@ fun ActiveBreakCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
+        val minutesUntilNext = ((breakItem.nextTriggerTime - System.currentTimeMillis()) / 60_000L)
+            .coerceAtLeast(0L).toInt()
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -208,7 +187,7 @@ fun ActiveBreakCard(
                             .background(color = PrimaryLight, shape = RoundedCornerShape(50.dp))
                     )
                     Text(
-                        text = "in ${breakItem.minutesUntilNext} ${if (breakItem.minutesUntilNext >= 60) "hrs" else "mins"}",
+                        text = "in $minutesUntilNext ${if (minutesUntilNext >= 60) "hrs" else "mins"}",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
                         color = PrimaryLight
@@ -284,7 +263,10 @@ fun PausedBreakCard(
                             .background(color = BorderLight, shape = RoundedCornerShape(50.dp))
                     )
                     Text(
-                        text = "Paused for ${breakItem.pausedForCycles} cycles",
+                        text = when (val s = breakItem.state) {
+                            is BreakState.PausedForOccurrence -> "Paused for ${s.occurrences} cycles"
+                            else -> "Paused"
+                        },
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
                         color = MutedForegroundLight

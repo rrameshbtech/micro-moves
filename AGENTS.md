@@ -78,7 +78,8 @@ app/src/main/
 ### Core Tech Principles
 - Follow Domain-Driven Design (DDD) principles: separate domain logic from Android framework dependencies.
 - Use `ViewModel` for UI state management and business logic.
-- Use `StateFlow` for reactive UI updates and `SharedFlow` for one-time events
+- Use `StateFlow` for reactive UI updates and `SharedFlow` for one-time events.
+- Follow YAGNI, KISS, DRY, object calisthenics, and SOLID principles rigorously.
 
 ### Two-Tier Screen Hierarchy
 Planned screens follow a primary flow:

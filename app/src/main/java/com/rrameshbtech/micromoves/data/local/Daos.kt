@@ -30,9 +30,6 @@ interface BreakDao {
     @Query("SELECT * FROM breaks WHERE id = :id LIMIT 1")
     fun getBreakByIdFlow(id: Long): Flow<Break?>
 
-    @Query("SELECT * FROM breaks WHERE enabled = 1 ORDER BY name ASC")
-    fun getAllEnabledBreaks(): Flow<List<Break>>
-
     @Query("SELECT * FROM breaks ORDER BY name ASC")
     fun getAllBreaks(): Flow<List<Break>>
 
