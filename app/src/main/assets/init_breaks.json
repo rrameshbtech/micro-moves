@@ -1,6 +1,7 @@
 [
-  { "name": "Palming Eye Exercise", "frequencyMinutes": 15 },
-  { "name": "Neck Stretches",       "frequencyMinutes": 45 },
-  { "name": "Stand & Walk",         "frequencyMinutes": 60 },
-  { "name": "Shoulder Rolls",       "frequencyMinutes": 30 }
+  { "name": "Palming Eye Exercise", "frequencyMinutes": 15, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254, "exerciseIds": [1] },
+  { "name": "Neck Stretches", "frequencyMinutes": 45, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254, "exerciseIds": [2] },
+  { "name": "Stand & Walk", "frequencyMinutes": 60, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254, "exerciseIds": [3] },
+  { "name": "Shoulder Rolls", "frequencyMinutes": 30, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254, "exerciseIds": [4] },
+  { "name": "Full Reset Routine", "frequencyMinutes": 60, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254, "exerciseIds": [1, 4, 2] }
 ]

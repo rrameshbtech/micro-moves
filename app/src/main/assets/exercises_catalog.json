@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Palming Eye Exercise",
+    "description": "Rest tired eyes by covering them gently with warmed palms.",
+    "slides": [
+      { "description": "Rub your palms together until warm.", "durationMs": 5000 },
+      { "description": "Close your eyes and cover them gently with your palms.", "durationMs": 20000 },
+      { "description": "Breathe slowly and relax your shoulders.", "durationMs": 15000 }
+    ],
+    "suggestedSchedule": { "frequencyMinutes": 15, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254 }
+  },
+  {
+    "id": 2,
+    "name": "Neck Stretches",
+    "description": "Release neck and upper-shoulder tension from screen posture.",
+    "slides": [
+      { "description": "Tilt your head gently to the right, hold.", "durationMs": 10000 },
+      { "description": "Tilt your head gently to the left, hold.", "durationMs": 10000 },
+      { "description": "Slowly roll your head forward and back.", "durationMs": 10000 }
+    ],
+    "suggestedSchedule": { "frequencyMinutes": 45, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254 }
+  },
+  {
+    "id": 3,
+    "name": "Stand & Walk",
+    "description": "Get the blood flowing with a short walk away from your desk.",
+    "slides": [
+      { "description": "Stand up slowly and stretch your arms overhead.", "durationMs": 8000 },
+      { "description": "Walk around for a minute if you can.", "durationMs": 60000 }
+    ],
+    "suggestedSchedule": { "frequencyMinutes": 60, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254 }
+  },
+  {
+    "id": 4,
+    "name": "Shoulder Rolls",
+    "description": "Loosen tight shoulders with slow rolling motions.",
+    "slides": [
+      { "description": "Roll both shoulders forward 5 times.", "durationMs": 10000 },
+      { "description": "Roll both shoulders backward 5 times.", "durationMs": 10000 }
+    ],
+    "suggestedSchedule": { "frequencyMinutes": 30, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254 }
+  }
+]

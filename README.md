@@ -12,7 +12,8 @@ MicroMoves promotes better health by sending gentle reminders to take small brea
 
 - **Break Reminders**: Customizable periodic reminders for exercise breaks
 - **Guided Exercises**: Auto-advancing slide shows with instructions and images
-- **Pause/Resume**: Temporarily pause breaks without disabling them
+- **Enable/Disable**: Persistently turn a break off without losing its configuration
+- **Pause**: Temporarily suspend an enabled break for a fixed number of upcoming occurrences, or until a specific time
 - **Elderly-Friendly**: Large typography (18sp+), high contrast colors, no hidden menus
 - **Customizable Schedule**: Set frequency, active hours, and enable/disable breaks
 - **Minimal UI**: Clean design inspired by minimalist principles and accessibility standards
@@ -111,18 +112,29 @@ code/
 6. **Initial Setup** - Guided permissions and onboarding flow
 
 ### Data Model
-**Break**
-- `name`: String
-- `description`: String (health benefit explanation)
-- `frequency`: Int (interval in minutes)
-- `activeTimeRange`: Pair<Int, Int> (start/end hours)
-- `enabled`: Boolean
+
+Exercises are a built-in catalog (Palming Eye Exercise, Neck Stretches, etc.); a Break is a user-customized, ordered bundle of one or more catalog exercises.
+
+**Exercise** (catalog entry, stable ID)
+- `name`, `description`: String
 - `slides`: List<Slide>
+- `suggestedSchedule`: BreakSchedule (pre-fills a new Break's schedule when this exercise is added)
 
 **Slide**
-- `instructionText`: String
+- `description`: String
 - `imageUri`: String? (optional image URI)
 - `durationMs`: Long (milliseconds to display)
+
+**Break** (user-created/customized)
+- `name`: String
+- `schedule`: BreakSchedule (`frequencyMinutes`, `activeStartHour`, `activeEndHour`, `daysOfWeek`)
+- `enabled`: Boolean (persistent on/off)
+- `state`: Active | PausedForOccurrences(n) | PausedUntil(timestamp) (temporary pause conditions)
+- its ordered exercises are linked via `RoutineStep` (breakId, exerciseId, position), not embedded directly
+
+**Weekly Report** (data layer only, no screen yet)
+- `BreakOccurrence`: one row per time a break actually fires
+- `ExerciseOccurrence`: one row per exercise within that occurrence, recording whether it was completed, skipped, or paused, and time spent — the basis for "time spent per exercise" and skip/pause statistics
 
 ## Design System
 

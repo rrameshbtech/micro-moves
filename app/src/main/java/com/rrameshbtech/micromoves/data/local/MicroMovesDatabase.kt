@@ -5,21 +5,32 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.withTransaction
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.rrameshbtech.micromoves.data.Break
+import com.rrameshbtech.micromoves.data.BreakOccurrence
+import com.rrameshbtech.micromoves.data.BreakRoutine
+import com.rrameshbtech.micromoves.data.Exercise
+import com.rrameshbtech.micromoves.data.ExerciseOccurrence
+import com.rrameshbtech.micromoves.data.ResolvedRoutineStep
+import com.rrameshbtech.micromoves.data.RoutineStep
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [Break::class],
-    version = 1,
+    entities = [Break::class, Exercise::class, RoutineStep::class, BreakOccurrence::class, ExerciseOccurrence::class],
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(MicroMovesDBConverters::class)
 abstract class MicroMovesDatabase : RoomDatabase() {
 
     abstract fun breakDao(): BreakDao
+    abstract fun exerciseDao(): ExerciseDao
+    abstract fun routineStepDao(): RoutineStepDao
+    abstract fun breakOccurrenceDao(): BreakOccurrenceDao
+    abstract fun exerciseOccurrenceDao(): ExerciseOccurrenceDao
 
     companion object {
         @Volatile
@@ -32,7 +43,7 @@ abstract class MicroMovesDatabase : RoomDatabase() {
                     MicroMovesDatabase::class.java,
                     "micromoves_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(false)
                     .addCallback(SeedCallback(context.applicationContext))
                     .build()
                 INSTANCE = instance
@@ -42,13 +53,31 @@ abstract class MicroMovesDatabase : RoomDatabase() {
     }
 
     private class SeedCallback(private val context: Context) : RoomDatabase.Callback() {
-        override fun onCreate(db: SupportSQLiteDatabase) {
-            super.onCreate(db)
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            super.onOpen(db)
             CoroutineScope(Dispatchers.IO).launch {
-                INSTANCE?.breakDao()?.let { dao ->
-                    DatabaseSeeder.seed(context, dao)
+                INSTANCE?.let { database ->
+                    if (database.breakDao().getBreakCount() == 0) {
+                        DatabaseSeeder.seed(context, database.exerciseDao(), database.breakDao(), database.routineStepDao())
+                    }
                 }
             }
         }
+    }
+}
+
+suspend fun MicroMovesDatabase.getBreakRoutine(breakId: Long): BreakRoutine? {
+    val breakEntity = breakDao().getBreakById(breakId) ?: return null
+    return withTransaction {
+        val steps = routineStepDao().getStepsForBreak(breakId)
+        val exercisesById = exerciseDao().getExercisesByIds(steps.map { it.exerciseId }).associateBy { it.id }
+        BreakRoutine(
+            breakItem = breakEntity,
+            steps = steps.mapNotNull { step ->
+                exercisesById[step.exerciseId]?.let { exercise ->
+                    ResolvedRoutineStep(exercise = exercise, position = step.position, pauseAfterStep = step.pauseAfterStep)
+                }
+            },
+        )
     }
 }

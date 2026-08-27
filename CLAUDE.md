@@ -1,209 +1,74 @@
-# AGENTS.md: MicroMoves Codebase Guide
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-**MicroMoves** is a minimal, elderly-friendly Android health utility that reminds users to take periodic micro-breaks with guided exercises. The app is built with **Kotlin + Jetpack Compose** using a single-module MVVM architecture.
+MicroMoves (Pausify) is a minimal, elderly-friendly Android app that reminds users to take periodic micro-breaks with guided exercises. Single-module Kotlin + Jetpack Compose app using MVVM.
 
-## AI Guidelines
-- Always show plan and reasoning before code.
+**Design philosophy** (applies to every screen, not just documentation): Dieter Rams' "less, but better." Concretely:
+- Body text minimum 18sp, touch targets minimum 60dp.
+- High-contrast charcoal-on-off-white palette (see `ui/theme/Color.kt`), WCAG AA.
+- Primary actions (buttons, toggles, sliders) live in the bottom 60% of the screen for one-handed use.
+- No hidden menus — all navigation visible and tap-accessible.
+- A paused break must look visibly "asleep" (dimmed/muted), not just say so — see `PausedBreakCard` in `BreaksListScreen.kt` for the pattern (`.alpha(0.6f)` + muted color set).
 
-### Core Philosophy
-To maintain the product's integrity, every screen must adhere to these functional constraints:
-1. **Dieter Rams' "Less, but better"**: Every UI element must serve a functional purpose. If a break is paused, the UI must look "asleep" (muted/dimmed).
-2. **One-Handed Rule**: Primary interactive elements (Buttons, Toggles, Sliders) MUST be in the bottom 60% of the screen.
-3. **Elderly-Friendly Constraints**:
-   - **Typography**: Minimum `18sp` for body text.
-   - **Touch Targets**: Minimum `60dp` height/width for all clickable elements.
-   - **Contrast**: High contrast charcoal (`#2D2D2D`) on off-white (`#F9FBF9`) following WCAG AA standards.
-   - **No hidden menus**: All navigation visible and tap-accessible.
+## Build & Test Commands
 
-## Tech Stack & Dependencies
-- **Language**: Kotlin (Strict use of Coroutines and `Flow` for reactive programming).
-- **Minimum SDK**: API 26 (Android 8.0) | **Target SDK**: 35+
-- **UI Toolkit**: Jetpack Compose + Material 3.
-- **AndroidX KTX**: Always use KTX extensions (`core-ktx`, `lifecycle-viewmodel-ktx`, `room-ktx`) for idiomatic Kotlin integration.
-- **Image Loading**: Coil (Coroutine Image Loader) for rendering compressed WebP exercise slides.
-- **Local Database**: Room (SQLite wrapper) for persisting `Break` and `Slide` entities.
-- **Scheduling**: `AlarmManager` (Exact Alarms) with `BroadcastReceiver` to handle background triggers reliably.
-- **Architecture**: Clean Architecture with MVI (Model-View-Intent) / MVVM presentation pattern.
-
-## Testing Stack (Strictly Kotlin-Native)
-When writing tests, strictly use the following libraries. Do not use legacy Java testing tools like Mockito.
-- **Unit Testing**: JUnit4, `MockK` (for mocking domain/system classes), `kotlinx-coroutines-test` (for dispatchers), and `Turbine` (for testing StateFlows).
-- **UI & Integration Testing**: Compose UI Test (`ui-test-junit4`), Room Testing (`room-testing`), and Espresso only when necessary for system-level interactions.
-
-## Project Structure
-
-```
-app/src/main/
-├── java/com/rrameshbtech/micromoves/
-│   ├── MainActivity.kt                 # Entry point
-│   ├── data/                           # Break and Slide models
-|   ├── domain/                         # Pure domain objects and business logic (No Android dependencies)
-│   ├── viewmodel/                      # Logic for timers, triggers, and state
-│   └── ui/
-│       ├── components/                 # Reusable BreakCards, Buttons, ProgressRings
-│       ├── screens/                    # Dashboard, Customize, Execution, Report
-│       └── theme/
-│           ├── Color.kt                # Brand colors defined above
-│           ├── Theme.kt                # Material3 theme config
-│           └── Type.kt                 # 18sp+ Typography definitions
-└── res/
-    ├── values/strings.xml              # User-facing text (for localization)
-    └── drawable/                       # Icons (SVG/VectorDrawables)
-```
-
-## Build & Development
-
-### Gradle Setup
-- **Single-module**: `/app/` contains all source code
-- **Compose BOM**: `2026.02.01` (Feb 2026 release)
-- **Version code**: Currently 1.0
-
-### Key Commands
 ```bash
-# Build debug APK
-./gradlew assembleDebug
-
-# Run tests (currently minimal)
-./gradlew test
-
-# Build and run on device
-./gradlew installDebug
-./gradlew connectedAndroidTest
-
-# Preview Compose UI in IDE
-# Right-click @Preview function → "Show Compose Previews"
+./gradlew assembleDebug          # Build debug APK
+./gradlew installDebug           # Build and install on connected device/emulator
+./gradlew test                   # Run JVM unit tests (app/src/test)
+./gradlew connectedAndroidTest   # Run instrumented tests (app/src/androidTest)
+./gradlew lint                   # Static analysis
+./gradlew clean
 ```
 
-## Architecture Patterns
+Run a single JVM test class: `./gradlew test --tests "com.rrameshbtech.micromoves.ExampleUnitTest"`.
 
-### Core Tech Principles
-- Follow Domain-Driven Design (DDD) principles: separate domain logic from Android framework dependencies.
-- Use `ViewModel` for UI state management and business logic.
-- Use `StateFlow` for reactive UI updates and `SharedFlow` for one-time events.
-- Follow YAGNI, KISS, DRY, object calisthenics, and SOLID principles rigorously.
+Compose previews (`@Preview` functions) are the fastest feedback loop for UI work — open the file in Android Studio and use "Show Compose Previews" rather than deploying to a device for layout changes.
 
-### Two-Tier Screen Hierarchy
-Planned screens follow a primary flow:
-1. **Breaks List (Dashboard)**: Shows active breaks with countdown timers + Pause/Resume CTAs.
-2. **Customize Breaks (Editor)**: Expand cards to modify frequency, time ranges, and visual slide definitions.
-3. **Break Execution (Immersive)**: Full-screen auto-advancing slide show during a break.
-4. **New Break Creation**: Create custom exercises with slide-based definitions
-5. **Weekly Report (Reflection)**: Shows wellness rings and 7-day consistency bars.
-6. **Initial Setups**: Show step by step guide for the user who open app for first time to provide required app access and and latest in "Customize Breaks" screen. 
+## Architecture
 
-Currently, only base theme setup exists in `MainActivity.kt`. Future screens should be Composable functions in `ui/screens/` directory following this pattern:
-```kotlin
-@Composable
-fun BreaksListScreen(modifier: Modifier = Modifier) { ... }
+### Data model (`data/Models.kt`, one `@Entity` per file under `data/`)
 
-@Preview(showBackground = true)
-@Composable
-fun BreaksListScreenPreview() { ... }
+Exercises are a built-in catalog with a stable identity (referenced from many breaks and from report history); a Break is a user-customized ordered bundle of catalog exercises. Domain hierarchy, from smallest to largest:
+
+```
+Slide             -> imageUri, durationMs, description (one step of an exercise)
+Exercise          -> Room @Entity: id, name, description, List<Slide> (JSON column), suggestedSchedule (embedded BreakSchedule)
+DaysOfWeek        -> value object wrapping Set<java.time.DayOfWeek>; stored as an Int bitmask
+BreakSchedule     -> frequencyMinutes, activeStartHour, activeEndHour, daysOfWeek
+RoutineStep       -> Room @Entity (join table): breakId, exerciseId, position, pauseAfterStep — a break's ordered routine, persisted rather than embedded
+BreakState        -> sealed class: Active | PausedForOccurrences(occurrences) | PausedUntil(timestampMillis)
+Break             -> Room @Entity: id, name, schedule (embedded), enabled, state, nextTriggerTime, timestamps
+BreakOccurrence   -> Room @Entity: id, breakId, triggeredAt — one row per time a break actually fires (report audit-log parent)
+ExerciseOutcome   -> sealed class: Completed | Skipped | Paused
+ExerciseOccurrence-> Room @Entity: id, breakOccurrenceId, exerciseId, position, outcome, durationMs — one row per exercise within an occurrence (report audit-log child)
 ```
 
-### Data Model (Implied from Ideation)
-#### Base model hierarchy
-Slide ->  image URI, time-to-show, description
-Exercise -> Name, description, List<Slide>, total duration (derived from slides)
-RoutineStep -> Exercise, pauseAfterMs (boolean)
-BreakRoutine -> List<RoutineStep>, total duration (derived)
-BreakState -> Active, Paused, PausedForOccurrence
-BreakSchedule -> Frequency (e.g. every 30 mins), Time Range (e.g. 9am-5pm), Trigger Type (e.g. exact alarm)
-Break -> name, BreakSchedule, BreakRoutine, BreakState, nextTriggerTime (derived from schedule + state)
+`BreakRoutine`/`ResolvedRoutineStep` in `Models.kt` are plain (non-persisted) read-models — `BreakRoutine(breakItem, steps: List<ResolvedRoutineStep>)` is the hydrated join of a `Break` with its ordered `RoutineStep`s resolved to full `Exercise` objects, built by the `MicroMovesDatabase.getBreakRoutine(breakId)` extension function (in `MicroMovesDatabase.kt`) rather than stored anywhere. `enabled` (persistent on/off) is intentionally separate from `BreakState` (temporary, auto-resuming pause conditions) — a disabled break and a paused break both render as "asleep" in the UI, but only a paused one has a resume condition.
 
-## Theme & Styling Constants (`Theme.kt` & `Color.kt`)
+### Persistence (`data/local/`)
 
-Translate the minimalist design system into Compose using these specific values:
+- `MicroMovesDatabase` is a singleton Room database, version 2, with `Break`, `Exercise`, `RoutineStep`, `BreakOccurrence`, and `ExerciseOccurrence` as entities (`fallbackToDestructiveMigration`, so schema changes during development don't need migrations yet — revisit once there's real user data to preserve).
+- One DAO per entity: `BreakDao`, `ExerciseDao`, `RoutineStepDao`, `BreakOccurrenceDao`, `ExerciseOccurrenceDao` (all in `Daos.kt`). `BreakDao`/`ExerciseDao` expose `Flow<List<...>>` for reactive reads plus suspend functions for writes.
+- `MicroMovesDBConverters` serializes `BreakState` to a custom string format (`ACTIVE`, `PAUSED_FOR_OCCURRENCES:<n>`, `PAUSED_UNTIL:<millis>`), `ExerciseOutcome` similarly (`COMPLETED`/`SKIPPED`/`PAUSED`), `DaysOfWeek` to an `Int` bitmask, and `List<Slide>` to JSON via Gson (on `Exercise`, not on `Break` — routines are no longer embedded blobs). Any new field added to `BreakState`'s or `ExerciseOutcome`'s subclasses must be reflected in both the `from*`/`to*` converter functions.
+- Weekly-report aggregation (time spent per exercise, paused/skipped stats) should read `ExerciseOccurrenceDao.getEntriesSince(sinceMillis)` and aggregate in Kotlin over the typed `ExerciseOutcome` — deliberately not via `GROUP BY`/`WHERE outcome = '...'` in SQL, since that would hardcode the converter's string encoding into a query string with no compiler check.
+- On first database creation, `MicroMovesDatabase.SeedCallback` fires `DatabaseSeeder.seed()`, which reads `app/src/main/assets/exercises_catalog.json` (built-in exercise catalog: id, slides, suggested schedule) then `app/src/main/assets/init_breaks.json` (starter breaks: schedule + ordered `exerciseIds`) and inserts both, wiring up `RoutineStep` rows to link them. Update those JSON files (not code) to change default seed data.
 
-```kotlin
-// Colors
-val Background = Color(0xFFF9FBF9) // Soft off-white to reduce eye strain
-val Primary = Color(0xFF6A9C78) // Sage Green for active states/timers
-val Secondary = Color(0xFFE9EFEC) // Muted gray-green for secondary actions
-val Muted = Color(0xFFF1F3F1) // For paused/disabled states
-val Foreground = Color(0xFF2D2D2D) // High-contrast charcoal for text
+### UI / ViewModel
 
-// Typography (`Type.kt`)
-// Base all body text at 18sp minimum (Inter or system sans-serif)
+- `BreaksListViewModel` (`AndroidViewModel`) exposes DAO's `Flow<List<Break>>` as a `StateFlow` via `stateIn(WhileSubscribed(5_000))` — the standard pattern for screen-level ViewModels reading from Room in this app.
+- `BreaksListScreen.kt` splits into a stateful `BreaksListScreen` (owns the ViewModel) and a stateless `BreaksListContent`/card composables that take plain data — keep this split for new screens so previews can pass mock data without a ViewModel or database.
+- Theme constants live in `ui/theme/Color.kt` (`*Light` suffixed sage-green palette) and `ui/theme/Type.kt` (typography). `Theme.kt` still carries a `DarkColorScheme` and legacy Purple/Pink color constants from the default Compose template — these are unused by the app's actual design and dynamic color is enabled by default, so don't assume the sage palette is what renders on Android 12+ devices unless `dynamicColor = false`.
 
-// Dimensions
-val CardCornerRadius = 16.dp
-val TouchTargetMinHeight = 60.dp
-val StandardPadding = 24.dp
-val CardSpacing = 20.dp
-val SubtleElevation = 4.dp // Low-alpha elevation for a tactile look
-```
+### What's not built yet
 
+Only the Breaks List screen and its Room-backed data layer exist today. The `Exercise` catalog, `RoutineStep` ordering, and `BreakOccurrence`/`ExerciseOccurrence` report tables exist in the schema and are seeded, but have no UI and no write-path yet — nothing currently inserts a `BreakOccurrence`/`ExerciseOccurrence` row, since that requires a break-execution flow that doesn't exist. `docs/ideation.md` describes the full planned flow (Customize Breaks, Break Execution slideshow, New Break creation, Weekly Report, initial permissions setup) and `docs/screens/*.html` has visual mockups for those screens — check both before building a new screen so it matches the intended design rather than inventing layout from scratch. Notification/scheduling (`AlarmManager`, exact alarms, full-screen intents) and Coil-based image loading are dependencies already in `build.gradle.kts` but have no code using them yet.
 
-### Typography
-- **Body text**: Minimum 18sp for elderly accessibility (see `Type.kt`)
-- **Font**: Inter or SF Pro preferred (currently using FontFamily.Default)
-- Already defined `bodyLarge` at 16sp—increase and add `headlineMedium`, `labelLarge` for buttons
+## Key References
 
-### Layout Container
-- All screens wrapped in `MicroMovesTheme { ... }`
-- Use `Scaffold()` for consistent top bar + bottom action areas
-- Implement **fixed bottom button** for "Manage Breaks" (width: 100% - padding, height: 60px)
-
-## Key Development Practices
-
-### Composable Naming & Previews
-- Name UI composables after their screen/component: `BreaksListScreen`, `BreakCard`, `PauseButton`
-- Always include `@Preview` annotations for rapid visual feedback during development
-- Use `showBackground = true` for isolated component testing
-
-### State Management (Future)
-When break state and timers are implemented:
-- Use `MutableState<>` for local UI state (pause button toggles)
-- Consider `ViewModel` for persistent break data (frequency, schedule)
-- Use `remember { }` to preserve state across recompositions
-
-### Accessibility Priorities
-- **Content descriptions**: All buttons must have `contentDescription` param
-- **Text sizes**: Never below 18sp body text
-- **Color contrast**: Verify all text against WCAG AA standards (use accessibility scanner)
-- **Touch targets**: Minimum 60px height for all interactive elements
-- **No hidden menus**: All navigation visible and tap-accessible
-
-### Testing Patterns
-- Place screenshot/manual verification tests in `androidTest/`
-- Use `@Preview` for UI validation before device testing
-- Espresso tests for user flows (pause break, enable/disable)
-
-**Texting strings**: Add all user-facing text to `res/values/strings.xml` (enables future localization for elderly users in multiple languages).
-
-## Critical Integration Points
-
-### Break Notifications (Future)
-- Android requires explicit alarm/notification permissions (requested at setup)
-- Will need `AlarmManager` for periodic break triggers
-- Full-screen intent supported on Android 12+ for interrupting work
-
-### Exercise Data Format (Future)
-- Slides with images should store URIs in local cache, not embed large bitmaps
-- Time-to-show per slide should be configurable per exercise
-
-## Common Pitfalls & Patterns
-
-1. **Hard-coded dimensions**: Use `rememberNavController()` + responsive layouts instead of fixed widths
-2. **Dark mode support**: Always test with `darkTheme = true` in `@Preview` (elderly users often prefer high contrast)
-3. **Compose recomposition**: Avoid passing lambdas without `remember` to nested composables (causes unnecessary recreation)
-4. **State loss**: Don't rely on Activity member variables for UI state—use `remember` or `ViewModel`
-5. **Accessibility**: Screen reader compatibility is non-negotiable. Wrap all icon-only buttons with clear contentDescription params.
-
-## Design Documentation References
-
-- **Visual Language & Atmosphere**: `/docs/ai-design-context.md` (color, typography, interaction philosophy)
-- **Mock Screen Designs**: `/docs/screens` (All planned screens with detailed visual specifications)
-- **Feature Ideation**: `/docs/ideation.md` (all planned screens, data model, user flows)
-
----
-
-**Next Steps for New Developers**: 
-1. Read `/docs/ideation.md` for full feature scope
-2. Review `/docs/ai-design-dashboard.md` for visual specifications
-3. Create `ui/screens/BreaksListScreen.kt` with Compose preview
-4. Implement Break data model and mock data for preview testing
-
+- `docs/ideation.md` — full feature scope, screen-by-screen behavior, data model rationale.
+- `docs/ai-design-context.md`, `docs/ai-design-dashboard.md` — visual/interaction design system.
+- `docs/screens/*.html` — mockups for each planned screen.

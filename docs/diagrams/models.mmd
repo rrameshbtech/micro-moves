@@ -1,0 +1,53 @@
+erDiagram
+    BREAK ||--o{ ROUTINE_STEP : "has ordered steps"
+    EXERCISE ||--o{ ROUTINE_STEP : "referenced by"
+    BREAK ||--o{ BREAK_OCCURRENCE : "fires as"
+    BREAK_OCCURRENCE ||--o{ EXERCISE_OCCURRENCE : "logs"
+    EXERCISE ||--o{ EXERCISE_OCCURRENCE : "performed as"
+
+    BREAK {
+        Long id PK
+        String name
+        int frequencyMinutes
+        int activeStartHour
+        int activeEndHour
+        int daysOfWeek "bitmask"
+        boolean enabled
+        string state "ACTIVE | PAUSED_FOR_OCCURRENCES:n | PAUSED_UNTIL:ts"
+        long nextTriggerTime
+        long createdAt
+        long updatedAt
+    }
+
+    EXERCISE {
+        Long id PK
+        String name
+        String description
+        String slides "JSON blob: List of Slide"
+        int suggested_frequencyMinutes
+        int suggested_activeStartHour
+        int suggested_activeEndHour
+        int suggested_daysOfWeek "bitmask"
+    }
+
+    ROUTINE_STEP {
+        Long breakId PK
+        int position PK
+        Long exerciseId FK
+        boolean pauseAfterStep
+    }
+
+    BREAK_OCCURRENCE {
+        Long id PK
+        Long breakId FK
+        long triggeredAt
+    }
+
+    EXERCISE_OCCURRENCE {
+        Long id PK
+        Long breakOccurrenceId FK
+        Long exerciseId FK
+        int position
+        string outcome "COMPLETED | SKIPPED | PAUSED"
+        long durationMs
+    }

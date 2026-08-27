@@ -134,10 +134,10 @@ private fun BreaksListContent(
             }
 
             items(breaks) { breakItem ->
-                when (breakItem.state) {
-                    is BreakState.Active -> ActiveBreakCard(breakItem = breakItem)
-                    is BreakState.Paused,
-                    is BreakState.PausedForOccurrence -> PausedBreakCard(breakItem)
+                if (breakItem.enabled && breakItem.state is BreakState.Active) {
+                    ActiveBreakCard(breakItem = breakItem)
+                } else {
+                    PausedBreakCard(breakItem)
                 }
             }
 
@@ -272,8 +272,9 @@ fun PausedBreakCard(
                     )
                     Text(
                         text = when (val s = breakItem.state) {
-                            is BreakState.PausedForOccurrence -> "Paused for ${s.occurrences} cycles"
-                            else -> "Paused"
+                            is BreakState.PausedForOccurrences -> "Paused for ${s.occurrences} cycles"
+                            is BreakState.PausedUntil -> "Paused until ${formatPausedUntil(s.timestampMillis)}"
+                            is BreakState.Active -> if (!breakItem.enabled) "Disabled" else "Paused"
                         },
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
@@ -302,6 +303,11 @@ fun PausedBreakCard(
     }
 }
 
+private fun formatPausedUntil(timestampMillis: Long): String {
+    val zoned = java.time.Instant.ofEpochMilli(timestampMillis).atZone(java.time.ZoneId.systemDefault())
+    return zoned.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFFF1F3F1)
 @Composable
 private fun BreaksListScreenPreview() {
@@ -312,7 +318,9 @@ private fun BreaksListScreenPreview() {
                 Break(id = 1, name = "Palming Eye Exercise", state = BreakState.Active, nextTriggerTime = now + 15 * 60_000L),
                 Break(id = 2, name = "Neck Stretches", state = BreakState.Active, nextTriggerTime = now + 45 * 60_000L),
                 Break(id = 3, name = "Stand & Walk", state = BreakState.Active, nextTriggerTime = now + 120 * 60_000L),
-                Break(id = 4, name = "Shoulder Rolls", state = BreakState.PausedForOccurrence(occurrences = 2)),
+                Break(id = 4, name = "Shoulder Rolls", state = BreakState.PausedForOccurrences(occurrences = 2)),
+                Break(id = 5, name = "Wrist Stretches", enabled = false, nextTriggerTime = now + 30 * 60_000L),
+                Break(id = 6, name = "Desk Yoga", state = BreakState.PausedUntil(now + 2 * 60 * 60_000L)),
             )
         )
     }
