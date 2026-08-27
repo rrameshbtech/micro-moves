@@ -41,7 +41,7 @@ DaysOfWeek        -> value object wrapping Set<java.time.DayOfWeek>; stored as a
 BreakSchedule     -> frequencyMinutes, activeStartHour, activeEndHour, daysOfWeek
 RoutineStep       -> Room @Entity (join table): breakId, exerciseId, position, pauseAfterStep — a break's ordered routine, persisted rather than embedded
 BreakState        -> sealed class: Active | PausedForOccurrences(occurrences) | PausedUntil(timestampMillis)
-Break             -> Room @Entity: id, name, schedule (embedded), enabled, state, nextTriggerTime, timestamps
+Break             -> Room @Entity: id, name, schedule (embedded), enabled, state, timestamps; nextTriggerTimeInMins(now) is computed on the fly from schedule, not stored
 BreakOccurrence   -> Room @Entity: id, breakId, triggeredAt — one row per time a break actually fires (report audit-log parent)
 ExerciseOutcome   -> sealed class: Completed | Skipped | Paused
 ExerciseOccurrence-> Room @Entity: id, breakOccurrenceId, exerciseId, position, outcome, durationMs — one row per exercise within an occurrence (report audit-log child)

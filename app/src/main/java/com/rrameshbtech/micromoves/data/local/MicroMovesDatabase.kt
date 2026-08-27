@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Break::class, Exercise::class, RoutineStep::class, BreakOccurrence::class, ExerciseOccurrence::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(MicroMovesDBConverters::class)

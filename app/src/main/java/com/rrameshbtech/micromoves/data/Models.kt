@@ -1,6 +1,8 @@
 package com.rrameshbtech.micromoves.data
 
 import java.time.DayOfWeek
+import java.time.Duration
+import java.time.LocalDateTime
 
 data class Slide(
     val imageUri: String? = null,
@@ -26,6 +28,32 @@ data class BreakSchedule(
     val activeEndHour: Int = 17,
     val daysOfWeek: DaysOfWeek = DaysOfWeek.EVERY_DAY,
 )
+
+/**
+ * Next moment on or after [from] that falls on an active day, within the active hour
+ * window, and aligned to a [BreakSchedule.frequencyMinutes] step from the window's start.
+ * Searches up to two weeks ahead; falls back to [from] + one step if no active day is found
+ * (only possible if [BreakSchedule.daysOfWeek] is empty).
+ */
+fun BreakSchedule.nextOccurrence(from: LocalDateTime): LocalDateTime {
+    val step = frequencyMinutes.toLong().coerceAtLeast(1)
+    for (dayOffset in 0..13) {
+        val date = from.toLocalDate().plusDays(dayOffset.toLong())
+        if (!daysOfWeek.contains(date.dayOfWeek)) continue
+
+        val windowStart = date.atTime(activeStartHour, 0)
+        val windowEnd = date.atTime(activeEndHour, 0)
+        if (!windowEnd.isAfter(windowStart)) continue
+
+        val earliestOnDay = if (dayOffset == 0) maxOf(windowStart, from) else windowStart
+        val minutesPastStart = Duration.between(windowStart, earliestOnDay).toMinutes()
+        val stepsPassed = (minutesPastStart + step - 1) / step
+        val slot = windowStart.plusMinutes(stepsPassed * step)
+
+        if (!slot.isAfter(windowEnd)) return slot
+    }
+    return from.plusMinutes(step)
+}
 
 sealed class BreakState {
     object Active : BreakState()

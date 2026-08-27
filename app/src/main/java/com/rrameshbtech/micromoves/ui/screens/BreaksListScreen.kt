@@ -24,8 +24,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -36,7 +40,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rrameshbtech.micromoves.data.Break
+import com.rrameshbtech.micromoves.data.BreakSchedule
 import com.rrameshbtech.micromoves.data.BreakState
+import com.rrameshbtech.micromoves.data.DaysOfWeek
+import kotlinx.coroutines.delay
+import java.time.DayOfWeek
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import com.rrameshbtech.micromoves.ui.theme.BackgroundLight
 import com.rrameshbtech.micromoves.ui.theme.BorderLight
 import com.rrameshbtech.micromoves.ui.theme.CardForegroundLight
@@ -51,18 +61,33 @@ import com.rrameshbtech.micromoves.ui.theme.SecondaryForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.SecondaryLight
 import com.rrameshbtech.micromoves.viewmodel.BreaksListViewModel
 
+private const val ETA_TICK_INTERVAL_MILLIS = 30_000L
+
+@Composable
+private fun tickingNow(intervalMillis: Long = ETA_TICK_INTERVAL_MILLIS): LocalDateTime {
+    var now by remember { mutableStateOf(LocalDateTime.now()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(intervalMillis)
+            now = LocalDateTime.now()
+        }
+    }
+    return now
+}
+
 @Composable
 fun BreaksListScreen(
     viewModel: BreaksListViewModel = viewModel(),
     modifier: Modifier = Modifier,
 ) {
     val breaks by viewModel.breaks.collectAsState()
-    BreaksListContent(breaks = breaks, modifier = modifier)
+    BreaksListContent(breaks = breaks, now = tickingNow(), modifier = modifier)
 }
 
 @Composable
 private fun BreaksListContent(
     breaks: List<Break>,
+    now: LocalDateTime = LocalDateTime.now(),
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -135,7 +160,7 @@ private fun BreaksListContent(
 
             items(breaks) { breakItem ->
                 if (breakItem.enabled && breakItem.state is BreakState.Active) {
-                    ActiveBreakCard(breakItem = breakItem)
+                    ActiveBreakCard(breakItem = breakItem, now = now)
                 } else {
                     PausedBreakCard(breakItem)
                 }
@@ -151,6 +176,7 @@ private fun BreaksListContent(
 @Composable
 fun ActiveBreakCard(
     breakItem: Break,
+    now: LocalDateTime = LocalDateTime.now(),
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -164,8 +190,7 @@ fun ActiveBreakCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        val minutesUntilNext = ((breakItem.nextTriggerTime - System.currentTimeMillis()) / 60_000L)
-            .coerceAtLeast(0L).toInt()
+        val minutesUntilNext = breakItem.nextTriggerTimeInMins(now)
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -195,7 +220,7 @@ fun ActiveBreakCard(
                             .background(color = PrimaryLight, shape = RoundedCornerShape(50.dp))
                     )
                     Text(
-                        text = "in $minutesUntilNext ${if (minutesUntilNext >= 60) "hrs" else "mins"}",
+                        text = formatBreakEta(now, minutesUntilNext),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
                         color = PrimaryLight
@@ -308,19 +333,67 @@ private fun formatPausedUntil(timestampMillis: Long): String {
     return zoned.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
 }
 
+private fun pluralize(count: Long, unit: String): String = if (count == 1L) unit else "${unit}s"
+
+private fun formatBreakEta(now: LocalDateTime, minutesUntil: Long): String {
+    if (minutesUntil < 1) return "within a minute"
+    if (minutesUntil < 60) return "in $minutesUntil ${pluralize(minutesUntil, "min")}"
+
+    val targetDate = now.plusMinutes(minutesUntil).toLocalDate()
+    val daysUntil = ChronoUnit.DAYS.between(now.toLocalDate(), targetDate)
+
+    return when {
+        daysUntil <= 0 -> {
+            val hours = minutesUntil / 60
+            "in $hours ${pluralize(hours, "hour")}"
+        }
+        daysUntil == 1L -> "occurs tomorrow"
+        daysUntil in 2..6 -> "occurs in $daysUntil days"
+        else -> "occurs next week"
+    }
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFFF1F3F1)
 @Composable
 private fun BreaksListScreenPreview() {
-    val now = System.currentTimeMillis()
+    // Fixed reference instant (a Monday) so every ETA wording bucket renders deterministically.
+    val now = LocalDateTime.of(2026, 1, 5, 10, 5)
+    val allDay = BreakSchedule(activeStartHour = 0, activeEndHour = 23)
     MicroMovesTheme {
         BreaksListContent(
+            now = now,
             breaks = listOf(
-                Break(id = 1, name = "Palming Eye Exercise", state = BreakState.Active, nextTriggerTime = now + 15 * 60_000L),
-                Break(id = 2, name = "Neck Stretches", state = BreakState.Active, nextTriggerTime = now + 45 * 60_000L),
-                Break(id = 3, name = "Stand & Walk", state = BreakState.Active, nextTriggerTime = now + 120 * 60_000L),
-                Break(id = 4, name = "Shoulder Rolls", state = BreakState.PausedForOccurrences(occurrences = 2)),
-                Break(id = 5, name = "Wrist Stretches", enabled = false, nextTriggerTime = now + 30 * 60_000L),
-                Break(id = 6, name = "Desk Yoga", state = BreakState.PausedUntil(now + 2 * 60 * 60_000L)),
+                Break(id = 1, name = "Palming Eye Exercise", schedule = allDay.copy(frequencyMinutes = 5)),
+                Break(id = 2, name = "Neck Stretches", schedule = allDay.copy(frequencyMinutes = 15)),
+                Break(id = 3, name = "Stand & Walk", schedule = allDay.copy(frequencyMinutes = 240)),
+                Break(
+                    id = 4,
+                    name = "Morning Stretch",
+                    schedule = BreakSchedule(frequencyMinutes = 30, activeStartHour = 6, activeEndHour = 9),
+                ),
+                Break(
+                    id = 5,
+                    name = "Thursday Reset",
+                    schedule = BreakSchedule(
+                        frequencyMinutes = 30,
+                        activeStartHour = 6,
+                        activeEndHour = 9,
+                        daysOfWeek = DaysOfWeek(setOf(DayOfWeek.THURSDAY)),
+                    ),
+                ),
+                Break(
+                    id = 6,
+                    name = "Weekly Deep Stretch",
+                    schedule = BreakSchedule(
+                        frequencyMinutes = 30,
+                        activeStartHour = 6,
+                        activeEndHour = 9,
+                        daysOfWeek = DaysOfWeek(setOf(DayOfWeek.MONDAY)),
+                    ),
+                ),
+                Break(id = 7, name = "Shoulder Rolls", state = BreakState.PausedForOccurrences(occurrences = 2)),
+                Break(id = 8, name = "Wrist Stretches", enabled = false),
+                Break(id = 9, name = "Desk Yoga", state = BreakState.PausedUntil(now.plusHours(2).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())),
             )
         )
     }
