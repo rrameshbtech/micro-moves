@@ -8,6 +8,7 @@ import com.rrameshbtech.micromoves.data.BreakState
 import com.rrameshbtech.micromoves.data.local.MicroMovesDatabase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -22,7 +23,10 @@ class BreaksListViewModel(application: Application) : AndroidViewModel(applicati
             initialValue = emptyList()
         )
 
-    fun pauseBreak(breakItem: Break) = updateState(breakItem, BreakState.PausedForOccurrences(occurrences = PAUSE_OCCURRENCES))
+    fun pauseBreak(
+        breakItem: Break,
+        state: BreakState = BreakState.PausedForOccurrences(occurrences = PAUSE_OCCURRENCES),
+    ) = updateState(breakItem, state)
 
     fun resumeBreak(breakItem: Break) = updateState(breakItem, BreakState.Active)
 

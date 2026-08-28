@@ -55,6 +55,18 @@ fun BreakSchedule.nextOccurrence(from: LocalDateTime): LocalDateTime {
     return from.plusMinutes(step)
 }
 
+/**
+ * The occurrence at which this break would next fire if its next [skipCount] occurrences
+ * (from [from]) were skipped — i.e. the resume point behind a `PausedForOccurrences(skipCount)`.
+ */
+fun BreakSchedule.resumeOccurrenceAfterSkipping(from: LocalDateTime, skipCount: Int): LocalDateTime {
+    var occurrence = nextOccurrence(from)
+    repeat(skipCount) {
+        occurrence = nextOccurrence(occurrence.plusMinutes(1))
+    }
+    return occurrence
+}
+
 sealed class BreakState {
     object Active : BreakState()
     data class PausedForOccurrences(val occurrences: Int) : BreakState()

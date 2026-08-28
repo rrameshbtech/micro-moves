@@ -1,6 +1,12 @@
 package com.rrameshbtech.micromoves.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.width
@@ -20,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,15 +35,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,6 +58,8 @@ import com.rrameshbtech.micromoves.data.BreakSchedule
 import com.rrameshbtech.micromoves.data.BreakState
 import com.rrameshbtech.micromoves.data.DaysOfWeek
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -60,13 +76,75 @@ import com.rrameshbtech.micromoves.ui.theme.PrimaryForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.SecondaryForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.SecondaryLight
 import com.rrameshbtech.micromoves.ui.components.MicroMovesToastHost
+import com.rrameshbtech.micromoves.ui.components.PauseOptionsPanel
 import com.rrameshbtech.micromoves.ui.components.rememberToastQueueState
 import com.rrameshbtech.micromoves.viewmodel.BreaksListViewModel
 
 private const val ETA_TICK_INTERVAL_MILLIS = 30_000L
 private const val TOAST_DURATION_MILLIS = 5_000L
 private const val MAX_VISIBLE_TOASTS = 3
+private const val MAX_PAUSE_OCCURRENCES = 20
 private val TOAST_ALIGNMENT = Alignment.BottomCenter
+private val SWIPE_RIGHT_NUDGE_OFFSET = 24.dp
+private const val SWIPE_RIGHT_COMPLETE_FRACTION = 0.25f
+private const val SWIPE_LEFT_COMPLETE_FRACTION = 0.5f
+private const val SWIPE_SETTLE_DURATION_MILLIS = 200
+
+/**
+ * Drives a break card's swipe gestures. Anything short of a completed swipe springs back to
+ * the card's original position — no lingering offset, so collapsed and expanded cards stay
+ * aligned with the rest of the list. A completed right swipe (past [SWIPE_RIGHT_COMPLETE_FRACTION]
+ * of the card's width) or a long press nudges the card out and back while calling [onExpand] to
+ * reveal the pause customization panel. A completed left swipe (past [SWIPE_LEFT_COMPLETE_FRACTION])
+ * slides the card fully off-screen and fires [onSwipeLeftAction] (the card's primary CTA — pause
+ * or resume) before resetting; the item then reappears wherever its now-changed break state sorts it.
+ */
+@Composable
+private fun Modifier.swipeableBreakCard(
+    expanded: Boolean,
+    onExpand: () -> Unit,
+    onSwipeLeftAction: () -> Unit,
+): Modifier {
+    val nudgePx = with(LocalDensity.current) { SWIPE_RIGHT_NUDGE_OFFSET.toPx() }
+    val offsetX = remember { Animatable(0f) }
+    var widthPx by remember { mutableFloatStateOf(0f) }
+    val scope = rememberCoroutineScope()
+
+    suspend fun nudgeRightThenExpand() {
+        offsetX.animateTo(nudgePx, tween(SWIPE_SETTLE_DURATION_MILLIS))
+        onExpand()
+        offsetX.animateTo(0f, tween(SWIPE_SETTLE_DURATION_MILLIS))
+    }
+
+    return this
+        .onSizeChanged { widthPx = it.width.toFloat() }
+        .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+        .pointerInput(expanded) {
+            if (!expanded) {
+                detectTapGestures(onLongPress = { scope.launch { nudgeRightThenExpand() } })
+            }
+        }
+        .draggable(
+            enabled = !expanded,
+            orientation = Orientation.Horizontal,
+            state = rememberDraggableState { delta ->
+                scope.launch { offsetX.snapTo(offsetX.value + delta) }
+            },
+            onDragStopped = {
+                val rightThresholdPx = widthPx * SWIPE_RIGHT_COMPLETE_FRACTION
+                val leftThresholdPx = widthPx * SWIPE_LEFT_COMPLETE_FRACTION
+                when {
+                    offsetX.value <= -leftThresholdPx -> {
+                        offsetX.animateTo(-widthPx, tween(SWIPE_SETTLE_DURATION_MILLIS))
+                        onSwipeLeftAction()
+                        offsetX.snapTo(0f)
+                    }
+                    offsetX.value >= rightThresholdPx -> nudgeRightThenExpand()
+                    else -> offsetX.animateTo(0f, tween(SWIPE_SETTLE_DURATION_MILLIS))
+                }
+            },
+        )
+}
 
 @Composable
 private fun tickingNow(intervalMillis: Long = ETA_TICK_INTERVAL_MILLIS): LocalDateTime {
@@ -87,14 +165,15 @@ fun BreaksListScreen(
 ) {
     val breaks by viewModel.breaks.collectAsState()
     val toastQueue = rememberToastQueueState(maxVisible = MAX_VISIBLE_TOASTS)
+    val now = tickingNow()
 
     Box(modifier = modifier.fillMaxSize()) {
         BreaksListContent(
             breaks = breaks,
-            now = tickingNow(),
-            onPause = { breakItem ->
-                viewModel.pauseBreak(breakItem)
-                toastQueue.show(pauseToastMessage(breakItem))
+            now = now,
+            onPause = { breakItem, state ->
+                viewModel.pauseBreak(breakItem, state)
+                toastQueue.show(pauseToastMessage(breakItem, state, now))
             },
             onResume = { breakItem ->
                 viewModel.resumeBreak(breakItem)
@@ -109,9 +188,11 @@ fun BreaksListScreen(
     }
 }
 
-private fun pauseToastMessage(breakItem: Break): String {
-    val occurrences = BreaksListViewModel.PAUSE_OCCURRENCES
-    return "${breakItem.name} paused for $occurrences ${pluralize(occurrences.toLong(), "time")}"
+private fun pauseToastMessage(breakItem: Break, state: BreakState, now: LocalDateTime): String = when (state) {
+    is BreakState.PausedForOccurrences ->
+        "${breakItem.name} paused for ${state.occurrences} ${pluralize(state.occurrences.toLong(), "time")}"
+    is BreakState.PausedUntil -> "${breakItem.name} paused until ${formatPausedUntil(state.timestampMillis, now)}"
+    is BreakState.Active -> resumeToastMessage(breakItem)
 }
 
 private fun resumeToastMessage(breakItem: Break): String = "${breakItem.name} is resumed"
@@ -120,7 +201,7 @@ private fun resumeToastMessage(breakItem: Break): String = "${breakItem.name} is
 private fun BreaksListContent(
     breaks: List<Break>,
     now: LocalDateTime = LocalDateTime.now(),
-    onPause: (Break) -> Unit = {},
+    onPause: (Break, BreakState) -> Unit = { _, _ -> },
     onResume: (Break) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -192,11 +273,23 @@ private fun BreaksListContent(
                 )
             }
 
-            items(breaks.sortedWith(breakDisplayOrder(now))) { breakItem ->
+            items(breaks.sortedWith(breakDisplayOrder(now)), key = { it.id }) { breakItem ->
                 if (breakItem.enabled && breakItem.state is BreakState.Active) {
-                    ActiveBreakCard(breakItem = breakItem, now = now, onPause = { onPause(breakItem) })
+                    ActiveBreakCard(
+                        breakItem = breakItem,
+                        now = now,
+                        onPause = { onPause(breakItem, BreakState.PausedForOccurrences(BreaksListViewModel.PAUSE_OCCURRENCES)) },
+                        onCustomPause = { state -> onPause(breakItem, state) },
+                        modifier = Modifier.animateItem(),
+                    )
                 } else {
-                    PausedBreakCard(breakItem, onResume = { onResume(breakItem) })
+                    PausedBreakCard(
+                        breakItem = breakItem,
+                        now = now,
+                        onResume = { onResume(breakItem) },
+                        onCustomPause = { state -> onPause(breakItem, state) },
+                        modifier = Modifier.animateItem(),
+                    )
                 }
             }
 
@@ -212,12 +305,20 @@ fun ActiveBreakCard(
     breakItem: Break,
     now: LocalDateTime = LocalDateTime.now(),
     onPause: () -> Unit = {},
+    onCustomPause: (BreakState) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var expanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 80.dp),
+            .heightIn(min = 80.dp)
+            .swipeableBreakCard(
+                expanded = expanded,
+                onExpand = { expanded = true },
+                onSwipeLeftAction = { expanded = false; onPause() },
+            ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = CardLight,
@@ -228,7 +329,7 @@ fun ActiveBreakCard(
         val minutesUntilNext = breakItem.nextTriggerTimeInMins(now)
         Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
@@ -280,20 +381,39 @@ fun ActiveBreakCard(
                 )
             }
         }
+        if (expanded) {
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), color = BorderLight)
+            PauseOptionsPanel(
+                schedule = breakItem.schedule,
+                now = now,
+                maxOccurrences = MAX_PAUSE_OCCURRENCES,
+                onCancel = { expanded = false },
+                onSave = { state -> onCustomPause(state); expanded = false },
+                modifier = Modifier.padding(20.dp),
+            )
+        }
     }
 }
 
 @Composable
 fun PausedBreakCard(
     breakItem: Break,
+    now: LocalDateTime = LocalDateTime.now(),
     onResume: () -> Unit = {},
+    onCustomPause: (BreakState) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var expanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 80.dp)
-            .alpha(0.6f),
+            .swipeableBreakCard(
+                expanded = expanded,
+                onExpand = { expanded = true },
+                onSwipeLeftAction = { expanded = false; onResume() },
+            ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MutedLight,
@@ -305,13 +425,15 @@ fun PausedBreakCard(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
         ) {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .alpha(0.6f),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
             ) {
                 Text(
@@ -329,12 +451,12 @@ fun PausedBreakCard(
                         modifier = Modifier
                             .width(8.dp)
                             .height(8.dp)
-                            .background(color = BorderLight, shape = RoundedCornerShape(50.dp))
+                            .background(color = MutedForegroundLight, shape = RoundedCornerShape(50.dp))
                     )
                     Text(
                         text = when (val s = breakItem.state) {
                             is BreakState.PausedForOccurrences -> "Paused for ${s.occurrences} cycles"
-                            is BreakState.PausedUntil -> "Paused until ${formatPausedUntil(s.timestampMillis)}"
+                            is BreakState.PausedUntil -> "Paused until ${formatPausedUntil(s.timestampMillis, now)}"
                             is BreakState.Active -> if (!breakItem.enabled) "Disabled" else "Paused"
                         },
                         fontSize = 15.sp,
@@ -349,8 +471,8 @@ fun PausedBreakCard(
                     .height(40.dp)
                     .widthIn(min = 80.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = CardLight,
-                    contentColor = ForegroundLight
+                    containerColor = MutedForegroundLight,
+                    contentColor = BackgroundLight
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -361,6 +483,18 @@ fun PausedBreakCard(
                 )
             }
         }
+        if (expanded) {
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), color = BorderLight)
+            PauseOptionsPanel(
+                schedule = breakItem.schedule,
+                now = now,
+                maxOccurrences = MAX_PAUSE_OCCURRENCES,
+                initialState = breakItem.state,
+                onCancel = { expanded = false },
+                onSave = { state -> onCustomPause(state); expanded = false },
+                modifier = Modifier.padding(20.dp),
+            )
+        }
     }
 }
 
@@ -370,9 +504,13 @@ private fun breakDisplayOrder(now: LocalDateTime): Comparator<Break> =
         { breakItem -> breakItem.nextTriggerTimeInMins(now) },
     )
 
-private fun formatPausedUntil(timestampMillis: Long): String {
+private val PAUSED_UNTIL_TIME_ONLY_FORMAT = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
+private val PAUSED_UNTIL_WITH_DATE_FORMAT = java.time.format.DateTimeFormatter.ofPattern("MMM d, h:mm a")
+
+private fun formatPausedUntil(timestampMillis: Long, now: LocalDateTime): String {
     val zoned = java.time.Instant.ofEpochMilli(timestampMillis).atZone(java.time.ZoneId.systemDefault())
-    return zoned.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
+    val format = if (zoned.toLocalDate() == now.toLocalDate()) PAUSED_UNTIL_TIME_ONLY_FORMAT else PAUSED_UNTIL_WITH_DATE_FORMAT
+    return zoned.format(format)
 }
 
 private fun pluralize(count: Long, unit: String): String = if (count == 1L) unit else "${unit}s"
