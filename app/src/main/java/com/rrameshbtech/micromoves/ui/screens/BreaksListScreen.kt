@@ -59,9 +59,14 @@ import com.rrameshbtech.micromoves.ui.theme.PrimaryLight
 import com.rrameshbtech.micromoves.ui.theme.PrimaryForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.SecondaryForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.SecondaryLight
+import com.rrameshbtech.micromoves.ui.components.MicroMovesToastHost
+import com.rrameshbtech.micromoves.ui.components.rememberToastQueueState
 import com.rrameshbtech.micromoves.viewmodel.BreaksListViewModel
 
 private const val ETA_TICK_INTERVAL_MILLIS = 30_000L
+private const val TOAST_DURATION_MILLIS = 5_000L
+private const val MAX_VISIBLE_TOASTS = 3
+private val TOAST_ALIGNMENT = Alignment.BottomCenter
 
 @Composable
 private fun tickingNow(intervalMillis: Long = ETA_TICK_INTERVAL_MILLIS): LocalDateTime {
@@ -81,13 +86,42 @@ fun BreaksListScreen(
     modifier: Modifier = Modifier,
 ) {
     val breaks by viewModel.breaks.collectAsState()
-    BreaksListContent(breaks = breaks, now = tickingNow(), modifier = modifier)
+    val toastQueue = rememberToastQueueState(maxVisible = MAX_VISIBLE_TOASTS)
+
+    Box(modifier = modifier.fillMaxSize()) {
+        BreaksListContent(
+            breaks = breaks,
+            now = tickingNow(),
+            onPause = { breakItem ->
+                viewModel.pauseBreak(breakItem)
+                toastQueue.show(pauseToastMessage(breakItem))
+            },
+            onResume = { breakItem ->
+                viewModel.resumeBreak(breakItem)
+                toastQueue.show(resumeToastMessage(breakItem))
+            },
+        )
+        MicroMovesToastHost(
+            state = toastQueue,
+            durationMillis = TOAST_DURATION_MILLIS,
+            alignment = TOAST_ALIGNMENT,
+        )
+    }
 }
+
+private fun pauseToastMessage(breakItem: Break): String {
+    val occurrences = BreaksListViewModel.PAUSE_OCCURRENCES
+    return "${breakItem.name} paused for $occurrences ${pluralize(occurrences.toLong(), "time")}"
+}
+
+private fun resumeToastMessage(breakItem: Break): String = "${breakItem.name} is resumed"
 
 @Composable
 private fun BreaksListContent(
     breaks: List<Break>,
     now: LocalDateTime = LocalDateTime.now(),
+    onPause: (Break) -> Unit = {},
+    onResume: (Break) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -158,11 +192,11 @@ private fun BreaksListContent(
                 )
             }
 
-            items(breaks) { breakItem ->
+            items(breaks.sortedWith(breakDisplayOrder(now))) { breakItem ->
                 if (breakItem.enabled && breakItem.state is BreakState.Active) {
-                    ActiveBreakCard(breakItem = breakItem, now = now)
+                    ActiveBreakCard(breakItem = breakItem, now = now, onPause = { onPause(breakItem) })
                 } else {
-                    PausedBreakCard(breakItem)
+                    PausedBreakCard(breakItem, onResume = { onResume(breakItem) })
                 }
             }
 
@@ -177,6 +211,7 @@ private fun BreaksListContent(
 fun ActiveBreakCard(
     breakItem: Break,
     now: LocalDateTime = LocalDateTime.now(),
+    onPause: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -228,7 +263,7 @@ fun ActiveBreakCard(
                 }
             }
             Button(
-                onClick = { /* Pause break */ },
+                onClick = onPause,
                 modifier = Modifier
                     .height(40.dp)
                     .widthIn(min = 80.dp),
@@ -251,6 +286,7 @@ fun ActiveBreakCard(
 @Composable
 fun PausedBreakCard(
     breakItem: Break,
+    onResume: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -308,7 +344,7 @@ fun PausedBreakCard(
                 }
             }
             Button(
-                onClick = { /* Resume break */ },
+                onClick = onResume,
                 modifier = Modifier
                     .height(40.dp)
                     .widthIn(min = 80.dp),
@@ -327,6 +363,12 @@ fun PausedBreakCard(
         }
     }
 }
+
+private fun breakDisplayOrder(now: LocalDateTime): Comparator<Break> =
+    compareBy(
+        { breakItem -> !(breakItem.enabled && breakItem.state is BreakState.Active) },
+        { breakItem -> breakItem.nextTriggerTimeInMins(now) },
+    )
 
 private fun formatPausedUntil(timestampMillis: Long): String {
     val zoned = java.time.Instant.ofEpochMilli(timestampMillis).atZone(java.time.ZoneId.systemDefault())
