@@ -161,6 +161,7 @@ private fun tickingNow(intervalMillis: Long = ETA_TICK_INTERVAL_MILLIS): LocalDa
 @Composable
 fun BreaksListScreen(
     viewModel: BreaksListViewModel = viewModel(),
+    onManageBreaks: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val breaks by viewModel.breaks.collectAsState()
@@ -179,6 +180,7 @@ fun BreaksListScreen(
                 viewModel.resumeBreak(breakItem)
                 toastQueue.show(resumeToastMessage(breakItem))
             },
+            onManageBreaks = onManageBreaks,
         )
         MicroMovesToastHost(
             state = toastQueue,
@@ -203,6 +205,7 @@ private fun BreaksListContent(
     now: LocalDateTime = LocalDateTime.now(),
     onPause: (Break, BreakState) -> Unit = { _, _ -> },
     onResume: (Break) -> Unit = {},
+    onManageBreaks: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -237,7 +240,7 @@ private fun BreaksListContent(
                     .padding(24.dp)
             ) {
                 Button(
-                    onClick = { /* Navigate to manage breaks */ },
+                    onClick = onManageBreaks,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(60.dp),

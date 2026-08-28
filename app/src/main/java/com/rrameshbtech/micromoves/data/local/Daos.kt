@@ -38,6 +38,9 @@ interface BreakDao {
     @Query("SELECT * FROM breaks ORDER BY name ASC")
     fun getAllBreaks(): Flow<List<Break>>
 
+    @Query("SELECT * FROM breaks WHERE enabled=1 ORDER BY name ASC")
+    fun getActiveBreaks(): Flow<List<Break>>
+
     @Query("SELECT COUNT(*) FROM breaks")
     suspend fun getBreakCount(): Int
 
