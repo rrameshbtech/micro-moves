@@ -12,6 +12,7 @@ import com.rrameshbtech.micromoves.data.Slide
 
 private data class SlideSeedItem(
     val description: String = "",
+    val subText: String = "",
     val durationMs: Long = 3000L,
     val imageUri: String? = null,
 )
@@ -47,7 +48,8 @@ private fun ScheduleSeedItem.toBreakSchedule() = BreakSchedule(
     daysOfWeek = DaysOfWeek.fromBitmask(daysOfWeekMask),
 )
 
-private fun SlideSeedItem.toSlide() = Slide(imageUri = imageUri, durationMs = durationMs, description = description)
+private fun SlideSeedItem.toSlide() =
+    Slide(imageUri = imageUri, durationMs = durationMs, description = description, subText = subText)
 
 private fun ExerciseSeedItem.toExercise() = Exercise(
     id = id,

@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.rrameshbtech.micromoves.ui.screens.BreakScreen
 import com.rrameshbtech.micromoves.ui.screens.BreaksListScreen
 import com.rrameshbtech.micromoves.ui.screens.CustomizeBreaksScreen
 import com.rrameshbtech.micromoves.ui.theme.MicroMovesTheme
@@ -24,16 +25,23 @@ class MainActivity : ComponentActivity() {
         setContent {
             MicroMovesTheme {
                 var showCustomize by remember { mutableStateOf(false) }
+                var activeBreakId by remember { mutableStateOf<Long?>(null) }
                 BackHandler(enabled = showCustomize) { showCustomize = false }
+                BackHandler(enabled = activeBreakId != null) { activeBreakId = null }
 
-                if (showCustomize) {
-                    CustomizeBreaksScreen(
+                when {
+                    activeBreakId != null -> BreakScreen(
+                        breakId = activeBreakId!!,
+                        onDone = { activeBreakId = null },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    showCustomize -> CustomizeBreaksScreen(
                         onBack = { showCustomize = false },
                         modifier = Modifier.fillMaxSize(),
                     )
-                } else {
-                    BreaksListScreen(
+                    else -> BreaksListScreen(
                         onManageBreaks = { showCustomize = true },
+                        onOpenBreak = { breakItem -> activeBreakId = breakItem.id },
                         modifier = Modifier.fillMaxSize(),
                     )
                 }

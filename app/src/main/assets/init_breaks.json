@@ -3,5 +3,6 @@
   { "name": "Neck Stretches", "frequencyMinutes": 45, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254, "exerciseIds": [2] },
   { "name": "Stand & Walk", "frequencyMinutes": 60, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254, "exerciseIds": [3] },
   { "name": "Shoulder Rolls", "frequencyMinutes": 30, "activeStartHour": 9, "activeEndHour": 19, "daysOfWeekMask": 254, "exerciseIds": [4] },
-  { "name": "Full Reset Routine", "frequencyMinutes": 60, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254, "exerciseIds": [1, 4, 2] }
+  { "name": "Full Reset Routine", "frequencyMinutes": 60, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254, "exerciseIds": [1, 4, 2] },
+  { "name": "Chest Opener", "frequencyMinutes": 60, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254, "exerciseIds": [5] }
 ]

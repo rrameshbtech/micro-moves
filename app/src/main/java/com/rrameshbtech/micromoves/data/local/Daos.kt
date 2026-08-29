@@ -62,6 +62,9 @@ interface ExerciseDao {
 
     @Query("SELECT * FROM exercises WHERE id IN (:ids)")
     suspend fun getExercisesByIds(ids: List<Long>): List<Exercise>
+
+    @Delete
+    suspend fun delete(exerciseItem: Exercise)
 }
 
 @Dao

@@ -7,7 +7,8 @@ import java.time.LocalDateTime
 data class Slide(
     val imageUri: String? = null,
     val durationMs: Long = 3000L,
-    val description: String = ""
+    val description: String = "",
+    val subText: String = ""
 )
 
 data class DaysOfWeek(val days: Set<DayOfWeek> = DayOfWeek.entries.toSet()) {
@@ -90,4 +91,36 @@ data class BreakRoutine(
     val steps: List<ResolvedRoutineStep>,
 ) {
     val totalDuration: Long get() = steps.sumOf { it.exercise.totalDuration }
+}
+
+sealed class BreakPlaybackItem {
+    data class ExerciseIntro(val exerciseName: String, val exerciseIndex: Int) : BreakPlaybackItem()
+    data class SlideItem(
+        val slide: Slide,
+        val exerciseIndex: Int,
+        val exerciseId: Long,
+        val isLastSlideOfExercise: Boolean,
+    ) : BreakPlaybackItem()
+    object Congrats : BreakPlaybackItem()
+}
+
+/**
+ * Flattens a routine into an ordered playback list: an intro before every exercise except
+ * the first, then that exercise's slides, then a terminal [BreakPlaybackItem.Congrats].
+ */
+fun BreakRoutine.toPlaybackItems(): List<BreakPlaybackItem> = buildList {
+    steps.forEachIndexed { exerciseIndex, step ->
+        if (exerciseIndex > 0) add(BreakPlaybackItem.ExerciseIntro(step.exercise.name, exerciseIndex))
+        step.exercise.slides.forEachIndexed { slideIndex, slide ->
+            add(
+                BreakPlaybackItem.SlideItem(
+                    slide = slide,
+                    exerciseIndex = exerciseIndex,
+                    exerciseId = step.exercise.id,
+                    isLastSlideOfExercise = slideIndex == step.exercise.slides.lastIndex,
+                )
+            )
+        }
+    }
+    add(BreakPlaybackItem.Congrats)
 }

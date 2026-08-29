@@ -40,5 +40,28 @@
       { "description": "Roll both shoulders backward 5 times.", "durationMs": 10000 }
     ],
     "suggestedSchedule": { "frequencyMinutes": 30, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254 }
+  },
+  {
+    "id": 5,
+    "name": "Chest Opener",
+    "description": "Open your chest and reverse the forward hunch of desk posture.",
+    "slides": [
+      { "description": "Preparation Posture", "subText": "Sit up straight on the front edge of your chair with your feet flat on the floor.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-1.png" },
+      { "description": "Hand Placement", "subText": "Reach behind your back and interlace your fingers together or hold the lower back of your chair.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-2.png" },
+      { "description": "The Stretch Movement", "subText": "Roll your shoulders backward and gently lift your chest toward the ceiling until you feel a pull.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-3.png" },
+      { "description": "Holding the Position", "subText": "Hold this open position steady while taking deep, slow breaths.", "durationMs": 15000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-4.png" },
+      { "description": "The Release", "subText": "Release your hands slowly and return your body to the starting upright posture.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-5.png" },
+      { "description": "Preparation Posture", "subText": "Sit up straight on the front edge of your chair with your feet flat on the floor.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-1.png" },
+      { "description": "Hand Placement", "subText": "Reach behind your back and interlace your fingers together or hold the lower back of your chair.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-2.png" },
+      { "description": "The Stretch Movement", "subText": "Roll your shoulders backward and gently lift your chest toward the ceiling until you feel a pull.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-3.png" },
+      { "description": "Holding the Position", "subText": "Hold this open position steady while taking deep, slow breaths.", "durationMs": 15000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-4.png" },
+      { "description": "The Release", "subText": "Release your hands slowly and return your body to the starting upright posture.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-5.png" },
+      { "description": "Preparation Posture", "subText": "Sit up straight on the front edge of your chair with your feet flat on the floor.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-1.png" },
+      { "description": "Hand Placement", "subText": "Reach behind your back and interlace your fingers together or hold the lower back of your chair.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-2.png" },
+      { "description": "The Stretch Movement", "subText": "Roll your shoulders backward and gently lift your chest toward the ceiling until you feel a pull.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-3.png" },
+      { "description": "Holding the Position", "subText": "Hold this open position steady while taking deep, slow breaths.", "durationMs": 15000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-4.png" },
+      { "description": "The Release", "subText": "Release your hands slowly and return your body to the starting upright posture.", "durationMs": 5000, "imageUri": "file:///android_asset/images/exercises/chest-opener/step-5.png" }
+    ],
+    "suggestedSchedule": { "frequencyMinutes": 60, "activeStartHour": 9, "activeEndHour": 17, "daysOfWeekMask": 254 }
   }
 ]

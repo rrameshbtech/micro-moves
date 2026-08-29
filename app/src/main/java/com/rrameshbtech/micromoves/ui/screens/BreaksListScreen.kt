@@ -94,10 +94,10 @@ private const val SWIPE_SETTLE_DURATION_MILLIS = 200
  * Drives a break card's swipe gestures. Anything short of a completed swipe springs back to
  * the card's original position — no lingering offset, so collapsed and expanded cards stay
  * aligned with the rest of the list. A completed right swipe (past [SWIPE_RIGHT_COMPLETE_FRACTION]
- * of the card's width) or a long press nudges the card out and back while calling [onExpand] to
- * reveal the pause customization panel. A completed left swipe (past [SWIPE_LEFT_COMPLETE_FRACTION])
- * slides the card fully off-screen and fires [onSwipeLeftAction] (the card's primary CTA — pause
- * or resume) before resetting; the item then reappears wherever its now-changed break state sorts it.
+ * of the card's width) nudges the card out and back while calling [onExpand] to reveal the pause
+ * customization panel. A completed left swipe (past [SWIPE_LEFT_COMPLETE_FRACTION]) slides the
+ * card fully off-screen and fires [onSwipeLeftAction] (the card's primary CTA — pause or resume)
+ * before resetting; the item then reappears wherever its now-changed break state sorts it.
  */
 @Composable
 private fun Modifier.swipeableBreakCard(
@@ -119,11 +119,6 @@ private fun Modifier.swipeableBreakCard(
     return this
         .onSizeChanged { widthPx = it.width.toFloat() }
         .offset { IntOffset(offsetX.value.roundToInt(), 0) }
-        .pointerInput(expanded) {
-            if (!expanded) {
-                detectTapGestures(onLongPress = { scope.launch { nudgeRightThenExpand() } })
-            }
-        }
         .draggable(
             enabled = !expanded,
             orientation = Orientation.Horizontal,
@@ -162,6 +157,7 @@ private fun tickingNow(intervalMillis: Long = ETA_TICK_INTERVAL_MILLIS): LocalDa
 fun BreaksListScreen(
     viewModel: BreaksListViewModel = viewModel(),
     onManageBreaks: () -> Unit = {},
+    onOpenBreak: (Break) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val breaks by viewModel.breaks.collectAsState()
@@ -181,6 +177,7 @@ fun BreaksListScreen(
                 toastQueue.show(resumeToastMessage(breakItem))
             },
             onManageBreaks = onManageBreaks,
+            onOpenBreak = onOpenBreak,
         )
         MicroMovesToastHost(
             state = toastQueue,
@@ -206,6 +203,7 @@ private fun BreaksListContent(
     onPause: (Break, BreakState) -> Unit = { _, _ -> },
     onResume: (Break) -> Unit = {},
     onManageBreaks: () -> Unit = {},
+    onOpenBreak: (Break) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -283,6 +281,7 @@ private fun BreaksListContent(
                         now = now,
                         onPause = { onPause(breakItem, BreakState.PausedForOccurrences(BreaksListViewModel.PAUSE_OCCURRENCES)) },
                         onCustomPause = { state -> onPause(breakItem, state) },
+                        onOpenBreak = { onOpenBreak(breakItem) },
                         modifier = Modifier.animateItem(),
                     )
                 } else {
@@ -291,6 +290,7 @@ private fun BreaksListContent(
                         now = now,
                         onResume = { onResume(breakItem) },
                         onCustomPause = { state -> onPause(breakItem, state) },
+                        onOpenBreak = { onOpenBreak(breakItem) },
                         modifier = Modifier.animateItem(),
                     )
                 }
@@ -309,6 +309,7 @@ fun ActiveBreakCard(
     now: LocalDateTime = LocalDateTime.now(),
     onPause: () -> Unit = {},
     onCustomPause: (BreakState) -> Unit = {},
+    onOpenBreak: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -317,6 +318,7 @@ fun ActiveBreakCard(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 80.dp)
+            .pointerInput(Unit) { detectTapGestures(onLongPress = { onOpenBreak() }) }
             .swipeableBreakCard(
                 expanded = expanded,
                 onExpand = { expanded = true },
@@ -404,6 +406,7 @@ fun PausedBreakCard(
     now: LocalDateTime = LocalDateTime.now(),
     onResume: () -> Unit = {},
     onCustomPause: (BreakState) -> Unit = {},
+    onOpenBreak: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -412,6 +415,7 @@ fun PausedBreakCard(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 80.dp)
+            .pointerInput(Unit) { detectTapGestures(onLongPress = { onOpenBreak() }) }
             .swipeableBreakCard(
                 expanded = expanded,
                 onExpand = { expanded = true },

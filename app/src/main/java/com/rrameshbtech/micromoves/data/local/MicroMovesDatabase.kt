@@ -16,11 +16,15 @@ import com.rrameshbtech.micromoves.data.ResolvedRoutineStep
 import com.rrameshbtech.micromoves.data.RoutineStep
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.all
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 
 @Database(
     entities = [Break::class, Exercise::class, RoutineStep::class, BreakOccurrence::class, ExerciseOccurrence::class],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(MicroMovesDBConverters::class)
@@ -58,7 +62,12 @@ abstract class MicroMovesDatabase : RoomDatabase() {
             CoroutineScope(Dispatchers.IO).launch {
                 INSTANCE?.let { database ->
                     if (database.breakDao().getBreakCount() == 0) {
-                        DatabaseSeeder.seed(context, database.exerciseDao(), database.breakDao(), database.routineStepDao())
+                        DatabaseSeeder.seed(
+                            context,
+                            database.exerciseDao(),
+                            database.breakDao(),
+                            database.routineStepDao()
+                        )
                     }
                 }
             }
@@ -75,7 +84,11 @@ suspend fun MicroMovesDatabase.getBreakRoutine(breakId: Long): BreakRoutine? {
             breakItem = breakEntity,
             steps = steps.mapNotNull { step ->
                 exercisesById[step.exerciseId]?.let { exercise ->
-                    ResolvedRoutineStep(exercise = exercise, position = step.position, pauseAfterStep = step.pauseAfterStep)
+                    ResolvedRoutineStep(
+                        exercise = exercise,
+                        position = step.position,
+                        pauseAfterStep = step.pauseAfterStep
+                    )
                 }
             },
         )
