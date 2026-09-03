@@ -111,12 +111,12 @@ sealed class BreakPlaybackItem {
         val exerciseId: Long,
         val isLastSlideOfExercise: Boolean,
     ) : BreakPlaybackItem()
-    object Congrats : BreakPlaybackItem()
+    data class Summary(val anyExerciseCompleted: Boolean = false) : BreakPlaybackItem()
 }
 
 /**
  * Flattens an ordered list of routine steps into a playback list: an intro before every
- * exercise except the first, then that exercise's slides, then a terminal [BreakPlaybackItem.Congrats].
+ * exercise except the first, then that exercise's slides, then a terminal [BreakPlaybackItem.Summary].
  */
 fun List<ResolvedRoutineStep>.toPlaybackItems(): List<BreakPlaybackItem> = buildList {
     this@toPlaybackItems.forEachIndexed { exerciseIndex, step ->
@@ -132,5 +132,5 @@ fun List<ResolvedRoutineStep>.toPlaybackItems(): List<BreakPlaybackItem> = build
             )
         }
     }
-    add(BreakPlaybackItem.Congrats)
+    add(BreakPlaybackItem.Summary())
 }

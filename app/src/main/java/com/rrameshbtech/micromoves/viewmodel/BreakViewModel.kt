@@ -34,6 +34,7 @@ class BreakViewModel(application: Application, private val breakOccurrenceId: Lo
     private var currentIndex = 0
     private var elapsedMs = 0L
     private var exerciseElapsedMs = 0L
+    private var anyExerciseCompleted = false
 
     init {
         viewModelScope.launch { startPlayback() }
@@ -57,11 +58,13 @@ class BreakViewModel(application: Application, private val breakOccurrenceId: Lo
 
     private suspend fun runTicker() {
         while (currentIndex <= items.lastIndex) {
-            val item = items[currentIndex]
+            val item = items[currentIndex].let {
+                if (it is BreakPlaybackItem.Summary) it.copy(anyExerciseCompleted = anyExerciseCompleted) else it
+            }
             val durationMs = durationForItem(item)
             _uiState.value = BreakUiState.Playing(item, elapsedMs, durationMs)
 
-            if (item is BreakPlaybackItem.Congrats) {
+            if (item is BreakPlaybackItem.Summary) {
                 markCompleted()
                 return
             }
@@ -88,7 +91,7 @@ class BreakViewModel(application: Application, private val breakOccurrenceId: Lo
             recordExerciseOccurrence(item.exerciseId, item.exerciseIndex, ExerciseOutcome.Skipped)
             val nextIndex = items
                 .drop(currentIndex + 1)
-                .indexOfFirst { it is BreakPlaybackItem.ExerciseIntro || it is BreakPlaybackItem.Congrats }
+                .indexOfFirst { it is BreakPlaybackItem.ExerciseIntro || it is BreakPlaybackItem.Summary }
                 .let { relativeIndex -> if (relativeIndex == -1) items.lastIndex else currentIndex + 1 + relativeIndex }
             moveToIndex(nextIndex)
         }
@@ -110,6 +113,7 @@ class BreakViewModel(application: Application, private val breakOccurrenceId: Lo
     }
 
     private suspend fun recordExerciseOccurrence(exerciseId: Long, exerciseIndex: Int, outcome: ExerciseOutcome) {
+        if (outcome == ExerciseOutcome.Completed) anyExerciseCompleted = true
         database.exerciseOccurrenceDao().insert(
             ExerciseOccurrence(
                 breakOccurrenceId = breakOccurrenceId,
@@ -124,7 +128,7 @@ class BreakViewModel(application: Application, private val breakOccurrenceId: Lo
     private fun durationForItem(item: BreakPlaybackItem): Long = when (item) {
         is BreakPlaybackItem.SlideItem -> item.slide.durationMs
         is BreakPlaybackItem.ExerciseIntro -> INTRO_DURATION_MS
-        BreakPlaybackItem.Congrats -> Long.MAX_VALUE
+        is BreakPlaybackItem.Summary -> Long.MAX_VALUE
     }
 
     companion object {

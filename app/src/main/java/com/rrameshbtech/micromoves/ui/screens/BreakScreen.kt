@@ -106,7 +106,10 @@ private fun BreakContent(
                         remainingMs = (uiState.durationMs - uiState.elapsedMs).coerceAtLeast(0L),
                         onLongPressSkip = onSkipExercise,
                     )
-                    BreakPlaybackItem.Congrats -> CongratsContent(onDone = onDone)
+                    is BreakPlaybackItem.Summary -> SummaryContent(
+                        anyExerciseCompleted = item.anyExerciseCompleted,
+                        onDone = onDone,
+                    )
                 }
             }
         }
@@ -225,17 +228,33 @@ private fun ExerciseIntroContent(exerciseName: String, modifier: Modifier = Modi
 }
 
 @Composable
-private fun CongratsContent(onDone: () -> Unit = {}, modifier: Modifier = Modifier) {
+private fun SummaryContent(
+    anyExerciseCompleted: Boolean = true,
+    onDone: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     Box(modifier = modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = Icons.Filled.ThumbUp,
-                contentDescription = null,
-                tint = PrimaryLight,
-                modifier = Modifier.size(64.dp),
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "Nice work!", fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = CardForegroundLight)
+            if (anyExerciseCompleted) {
+                Icon(
+                    imageVector = Icons.Filled.ThumbUp,
+                    contentDescription = null,
+                    tint = PrimaryLight,
+                    modifier = Modifier.size(64.dp),
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = "Nice work!", fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = CardForegroundLight)
+            } else {
+                Text(text = "😢", fontSize = 64.sp)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Aww, break skipped",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = CardForegroundLight,
+                    textAlign = TextAlign.Center,
+                )
+            }
             Spacer(modifier = Modifier.height(32.dp))
             Button(
                 onClick = onDone,
@@ -295,6 +314,12 @@ private fun ExerciseIntroContentPreview() {
 
 @Preview(showBackground = true, backgroundColor = 0xFFF1F3F1)
 @Composable
-private fun CongratsContentPreview() {
-    MicroMovesTheme { CongratsContent() }
+private fun SummaryContentPreview() {
+    MicroMovesTheme { SummaryContent(anyExerciseCompleted = true) }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFF1F3F1)
+@Composable
+private fun SummarySkippedContentPreview() {
+    MicroMovesTheme { SummaryContent(anyExerciseCompleted = false) }
 }

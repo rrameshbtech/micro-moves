@@ -35,10 +35,10 @@ class BreakRoutineToPlaybackItemsTest {
     }
 
     @Test
-    fun congratsIsAlwaysLast() {
+    fun summaryIsAlwaysLast() {
         val items = steps(exercise(1, "Neck Stretches", 2)).toPlaybackItems()
 
-        assertTrue(items.last() is BreakPlaybackItem.Congrats)
+        assertTrue(items.last() is BreakPlaybackItem.Summary)
     }
 
     @Test
