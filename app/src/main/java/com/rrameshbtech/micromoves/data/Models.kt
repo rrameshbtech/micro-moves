@@ -31,6 +31,15 @@ data class BreakSchedule(
 )
 
 /**
+ * How a break alerts the user when it fires. A high-priority notification always fires and isn't
+ * represented here — there is nothing to toggle, so no field for it.
+ */
+data class AlertSettings(
+    val chimeEnabled: Boolean = true,
+    val vibrationEnabled: Boolean = true,
+)
+
+/**
  * Next moment on or after [from] that falls on an active day, within the active hour
  * window, and aligned to a [BreakSchedule.frequencyMinutes] step from the window's start.
  * Searches up to two weeks ahead; falls back to [from] + one step if no active day is found

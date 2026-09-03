@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,13 +28,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rrameshbtech.micromoves.data.AlertSettings
 import com.rrameshbtech.micromoves.data.BreakSchedule
 import com.rrameshbtech.micromoves.data.DaysOfWeek
+import com.rrameshbtech.micromoves.ui.theme.BorderLight
 import com.rrameshbtech.micromoves.ui.theme.CardForegroundLight
+import com.rrameshbtech.micromoves.ui.theme.MutedForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.PrimaryForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.PrimaryLight
 import com.rrameshbtech.micromoves.ui.theme.SecondaryForegroundLight
@@ -44,20 +50,23 @@ private const val MIN_FREQUENCY_MINUTES = 30
 private const val MAX_FREQUENCY_MINUTES = 480
 
 /**
- * Local edit state seeded from [schedule] and only committed via [onSave] — [onCancel] simply
- * drops this composable from composition, discarding whatever was edited.
+ * Local edit state seeded from [schedule]/[alertSettings] and only committed via [onSave] —
+ * [onCancel] simply drops this composable from composition, discarding whatever was edited.
  */
 @Composable
 fun BreakScheduleEditorPanel(
     schedule: BreakSchedule,
+    alertSettings: AlertSettings,
     onCancel: () -> Unit,
-    onSave: (BreakSchedule) -> Unit,
+    onSave: (BreakSchedule, AlertSettings) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var frequencyMinutes by remember { mutableIntStateOf(schedule.frequencyMinutes) }
     var startHour by remember { mutableIntStateOf(schedule.activeStartHour) }
     var endHour by remember { mutableIntStateOf(schedule.activeEndHour) }
     var days by remember { mutableStateOf(schedule.daysOfWeek) }
+    var chimeEnabled by remember { mutableStateOf(alertSettings.chimeEnabled) }
+    var vibrationEnabled by remember { mutableStateOf(alertSettings.vibrationEnabled) }
 
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Text(text = "Every", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = CardForegroundLight)
@@ -100,6 +109,19 @@ fun BreakScheduleEditorPanel(
             DayOfWeekChipRow(selectedDays = days, onToggleDay = { day -> days = days.toggling(day) })
         }
 
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(text = "Alerts", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = CardForegroundLight)
+            AlertOptionRow(label = "High priority notification") {
+                Text(text = "Always on", fontSize = 15.sp, color = MutedForegroundLight)
+            }
+            AlertOptionRow(label = "Chime") {
+                ToggleSwitch(checked = chimeEnabled, onToggle = { chimeEnabled = it })
+            }
+            AlertOptionRow(label = "Vibration") {
+                ToggleSwitch(checked = vibrationEnabled, onToggle = { vibrationEnabled = it })
+            }
+        }
+
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedButton(
                 onClick = onCancel,
@@ -109,7 +131,12 @@ fun BreakScheduleEditorPanel(
                 Text(text = "Cancel", fontSize = 15.sp, fontWeight = FontWeight.Medium)
             }
             Button(
-                onClick = { onSave(BreakSchedule(frequencyMinutes, startHour, endHour, days)) },
+                onClick = {
+                    onSave(
+                        BreakSchedule(frequencyMinutes, startHour, endHour, days),
+                        AlertSettings(chimeEnabled, vibrationEnabled),
+                    )
+                },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryLight, contentColor = PrimaryForegroundLight),
                 shape = RoundedCornerShape(12.dp),
@@ -117,6 +144,39 @@ fun BreakScheduleEditorPanel(
                 Text(text = "Save", fontSize = 15.sp, fontWeight = FontWeight.Medium)
             }
         }
+    }
+}
+
+@Composable
+private fun AlertOptionRow(label: String, trailing: @Composable () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(text = label, fontSize = 16.sp, color = CardForegroundLight)
+        trailing()
+    }
+}
+
+@Composable
+fun ToggleSwitch(checked: Boolean, onToggle: (Boolean) -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(60.dp)
+            .clickable(role = Role.Switch, onClick = { onToggle(!checked) }),
+        contentAlignment = Alignment.Center,
+    ) {
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = PrimaryLight,
+                checkedThumbColor = PrimaryForegroundLight,
+                uncheckedTrackColor = BorderLight,
+                uncheckedThumbColor = MutedForegroundLight,
+            ),
+        )
     }
 }
 

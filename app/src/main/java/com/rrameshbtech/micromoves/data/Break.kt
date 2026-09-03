@@ -14,6 +14,7 @@ data class Break(
     val id: Long = 0,
     val name: String,
     @Embedded val schedule: BreakSchedule = BreakSchedule(),
+    @Embedded val alertSettings: AlertSettings = AlertSettings(),
     val enabled: Boolean = true,
     val state: BreakState = BreakState.Active,
     val createdAt: Long = System.currentTimeMillis(),

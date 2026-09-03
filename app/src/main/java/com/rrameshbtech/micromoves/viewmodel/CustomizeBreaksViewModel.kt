@@ -3,6 +3,7 @@ package com.rrameshbtech.micromoves.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.rrameshbtech.micromoves.data.AlertSettings
 import com.rrameshbtech.micromoves.data.Break
 import com.rrameshbtech.micromoves.data.BreakSchedule
 import com.rrameshbtech.micromoves.data.local.MicroMovesDatabase
@@ -28,9 +29,11 @@ class CustomizeBreaksViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    fun updateSchedule(breakItem: Break, schedule: BreakSchedule) {
+    fun updateSettings(breakItem: Break, schedule: BreakSchedule, alertSettings: AlertSettings) {
         viewModelScope.launch {
-            dao.update(breakItem.copy(schedule = schedule, updatedAt = System.currentTimeMillis()))
+            dao.update(
+                breakItem.copy(schedule = schedule, alertSettings = alertSettings, updatedAt = System.currentTimeMillis())
+            )
         }
     }
 }

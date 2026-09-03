@@ -23,10 +23,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,15 +34,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rrameshbtech.micromoves.data.AlertSettings
 import com.rrameshbtech.micromoves.data.Break
 import com.rrameshbtech.micromoves.data.BreakSchedule
 import com.rrameshbtech.micromoves.data.DaysOfWeek
 import com.rrameshbtech.micromoves.ui.components.BreakScheduleEditorPanel
+import com.rrameshbtech.micromoves.ui.components.ToggleSwitch
 import com.rrameshbtech.micromoves.ui.theme.BackgroundLight
 import com.rrameshbtech.micromoves.ui.theme.BorderLight
 import com.rrameshbtech.micromoves.ui.theme.CardForegroundLight
@@ -52,8 +52,6 @@ import com.rrameshbtech.micromoves.ui.theme.ForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.MicroMovesTheme
 import com.rrameshbtech.micromoves.ui.theme.MutedForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.MutedLight
-import com.rrameshbtech.micromoves.ui.theme.PrimaryForegroundLight
-import com.rrameshbtech.micromoves.ui.theme.PrimaryLight
 import com.rrameshbtech.micromoves.viewmodel.CustomizeBreaksViewModel
 import java.time.DayOfWeek
 
@@ -68,7 +66,7 @@ fun CustomizeBreaksScreen(
         breaks = breaks,
         onBack = onBack,
         onToggleEnabled = viewModel::setEnabled,
-        onSaveSchedule = viewModel::updateSchedule,
+        onSaveSettings = viewModel::updateSettings,
         modifier = modifier,
     )
 }
@@ -78,7 +76,7 @@ private fun CustomizeBreaksContent(
     breaks: List<Break>,
     onBack: () -> Unit = {},
     onToggleEnabled: (Break, Boolean) -> Unit = { _, _ -> },
-    onSaveSchedule: (Break, BreakSchedule) -> Unit = { _, _ -> },
+    onSaveSettings: (Break, BreakSchedule, AlertSettings) -> Unit = { _, _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -124,7 +122,7 @@ private fun CustomizeBreaksContent(
                 CustomizeBreakCard(
                     breakItem = breakItem,
                     onToggleEnabled = { enabled -> onToggleEnabled(breakItem, enabled) },
-                    onSaveSchedule = { schedule -> onSaveSchedule(breakItem, schedule) },
+                    onSaveSettings = { schedule, alertSettings -> onSaveSettings(breakItem, schedule, alertSettings) },
                     modifier = Modifier.animateItem(),
                 )
             }
@@ -138,17 +136,23 @@ private fun CustomizeBreaksContent(
 fun CustomizeBreakCard(
     breakItem: Break,
     onToggleEnabled: (Boolean) -> Unit,
-    onSaveSchedule: (BreakSchedule) -> Unit,
+    onSaveSettings: (BreakSchedule, AlertSettings) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    // A disabled break's schedule/alert settings can't be opened for editing — and if it's
+    // disabled while already open, close it so any unsaved edits are discarded (see
+    // BreakScheduleEditorPanel's doc comment: dropping it from composition is what cancels).
+    LaunchedEffect(breakItem.enabled) {
+        if (!breakItem.enabled) expanded = false
+    }
     val textColor = if (breakItem.enabled) CardForegroundLight else MutedForegroundLight
     val subtextColor = if (breakItem.enabled) ForegroundLight else MutedForegroundLight
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { expanded = !expanded },
+            .clickable(enabled = breakItem.enabled) { expanded = !expanded },
         shape = RoundedCornerShape(16.dp),
         colors = if (breakItem.enabled) {
             CardDefaults.cardColors(containerColor = CardLight, contentColor = CardForegroundLight)
@@ -180,8 +184,9 @@ fun CustomizeBreakCard(
             HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp), color = BorderLight)
             BreakScheduleEditorPanel(
                 schedule = breakItem.schedule,
+                alertSettings = breakItem.alertSettings,
                 onCancel = { expanded = false },
-                onSave = { schedule -> onSaveSchedule(schedule); expanded = false },
+                onSave = { schedule, alertSettings -> onSaveSettings(schedule, alertSettings); expanded = false },
                 modifier = Modifier.padding(20.dp),
             )
         }
@@ -189,25 +194,7 @@ fun CustomizeBreakCard(
 }
 
 @Composable
-private fun EnabledToggle(enabled: Boolean, onToggle: (Boolean) -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(60.dp)
-            .clickable(role = Role.Switch, onClick = { onToggle(!enabled) }),
-        contentAlignment = Alignment.Center,
-    ) {
-        Switch(
-            checked = enabled,
-            onCheckedChange = null,
-            colors = SwitchDefaults.colors(
-                checkedTrackColor = PrimaryLight,
-                checkedThumbColor = PrimaryForegroundLight,
-                uncheckedTrackColor = BorderLight,
-                uncheckedThumbColor = MutedForegroundLight,
-            ),
-        )
-    }
-}
+private fun EnabledToggle(enabled: Boolean, onToggle: (Boolean) -> Unit) = ToggleSwitch(enabled, onToggle)
 
 /** A crisp, static description of when a break fires — not a live countdown (see [formatScheduleSubtext] callers). */
 internal fun formatScheduleSubtext(schedule: BreakSchedule): String {
