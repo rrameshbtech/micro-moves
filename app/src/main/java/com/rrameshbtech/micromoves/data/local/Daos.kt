@@ -89,17 +89,17 @@ interface BreakOccurrenceDao {
     @Query("SELECT * FROM break_occurrences WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): BreakOccurrence?
 
-    @Query("SELECT * FROM break_occurrences WHERE breakId = :breakId AND completedAt IS NULL LIMIT 1")
+    @Query("SELECT * FROM break_occurrences WHERE breakId = :breakId AND completedAt IS NULL AND skippedAt IS NULL LIMIT 1")
     suspend fun getPendingForBreak(breakId: Long): BreakOccurrence?
 
-    @Query("SELECT * FROM break_occurrences WHERE completedAt IS NULL ORDER BY triggeredAt ASC LIMIT 1")
+    @Query("SELECT * FROM break_occurrences WHERE completedAt IS NULL AND skippedAt IS NULL ORDER BY triggeredAt ASC LIMIT 1")
     fun getOldestPendingFlow(): Flow<BreakOccurrence?>
-
-    @Query("DELETE FROM break_occurrences WHERE id = :id")
-    suspend fun deleteById(id: Long)
 
     @Query("UPDATE break_occurrences SET completedAt = :completedAt WHERE id = :id")
     suspend fun markCompleted(id: Long, completedAt: Long)
+
+    @Query("UPDATE break_occurrences SET skippedAt = :skippedAt WHERE id = :id")
+    suspend fun markSkipped(id: Long, skippedAt: Long)
 }
 
 @Dao

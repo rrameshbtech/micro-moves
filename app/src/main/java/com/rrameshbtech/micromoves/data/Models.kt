@@ -68,6 +68,26 @@ fun BreakSchedule.resumeOccurrenceAfterSkipping(from: LocalDateTime, skipCount: 
     return occurrence
 }
 
+/**
+ * Every slot on or after [from] and on or before [to] — used to catch up on however many
+ * occurrences fired while the app was away (crash/offline/killed) instead of only the latest one.
+ * ponytail: capped at 200 slots to guard against an unbounded loop for a pathological schedule
+ * after a very long gap; raise the cap (or page results) if real usage ever hits it.
+ */
+fun BreakSchedule.occurrencesBetween(from: LocalDateTime, to: LocalDateTime): List<LocalDateTime> {
+    val slots = mutableListOf<LocalDateTime>()
+    var anchor = from
+    while (slots.size < MAX_BACKFILL_OCCURRENCES) {
+        val slot = nextOccurrence(anchor)
+        if (slot.isAfter(to)) break
+        slots.add(slot)
+        anchor = slot.plusMinutes(1)
+    }
+    return slots
+}
+
+private const val MAX_BACKFILL_OCCURRENCES = 200
+
 sealed class BreakState {
     object Active : BreakState()
     data class PausedForOccurrences(val occurrences: Int) : BreakState()

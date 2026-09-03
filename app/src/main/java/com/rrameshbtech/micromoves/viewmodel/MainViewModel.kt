@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.rrameshbtech.micromoves.data.evaluateForWatcherTick
 import com.rrameshbtech.micromoves.data.local.MicroMovesDatabase
 import com.rrameshbtech.micromoves.data.local.createBreakOccurrenceSnapshot
+import com.rrameshbtech.micromoves.data.local.createBreakOccurrenceSnapshots
 import java.time.LocalDateTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
@@ -44,7 +45,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         breakDao.getActiveBreaks().first().forEach { breakItem ->
             val result = breakItem.evaluateForWatcherTick(now, nowMillis)
             result.updatedBreak?.let { breakDao.update(it) }
-            result.firedBreakId?.let { database.createBreakOccurrenceSnapshot(it) }
+            if (result.firedOccurrences.isNotEmpty()) {
+                database.createBreakOccurrenceSnapshots(breakItem.id, result.firedOccurrences)
+            }
         }
     }
 

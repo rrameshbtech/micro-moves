@@ -24,14 +24,17 @@ data class Break(
 }
 
 /** Outcome of one watcher tick's evaluation of a single break. */
-data class WatcherTickResult(val updatedBreak: Break? = null, val firedBreakId: Long? = null)
+data class WatcherTickResult(val updatedBreak: Break? = null, val firedOccurrences: List<Long> = emptyList())
 
 /**
- * Evaluates whether [now] means this break should fire, silently consume one paused slot, or
- * auto-resume — anchored off [Break.updatedAt], which is advanced to [nowMillis] (never to the
- * due slot's own time) whenever a slot is consumed. However long the app was away, the next check
- * is always against a fresh anchor, so a break can fire/consume at most once per tick regardless
- * of how many schedule periods actually elapsed — this is what caps catch-up to "most recent only."
+ * Evaluates whether [now] means this break should fire, silently consume paused slots, or
+ * auto-resume — anchored off [Break.updatedAt], which is advanced to [nowMillis] (never to a due
+ * slot's own time) whenever slots are consumed. Every slot that elapsed since the anchor is
+ * accounted for (not just the most recent one), so however long the app was away
+ * (crash/offline/killed), reopening it backfills every missed occurrence instead of silently
+ * dropping all but the latest. For [BreakState.PausedForOccurrences], slots consume the pause
+ * count first; any slots left over once the pause is exhausted are reported as fired, same as
+ * [BreakState.Active].
  */
 internal fun Break.evaluateForWatcherTick(now: LocalDateTime, nowMillis: Long): WatcherTickResult {
     if (!enabled) return WatcherTickResult()
@@ -42,15 +45,24 @@ internal fun Break.evaluateForWatcherTick(now: LocalDateTime, nowMillis: Long): 
             else WatcherTickResult(updatedBreak = copy(state = BreakState.Active, updatedAt = nowMillis))
 
         is BreakState.PausedForOccurrences -> {
-            if (schedule.nextOccurrence(anchor).isAfter(now)) return WatcherTickResult()
-            val remaining = currentState.occurrences - 1
+            val missedSlots = schedule.occurrencesBetween(anchor, now)
+            if (missedSlots.isEmpty()) return WatcherTickResult()
+            val consumed = minOf(missedSlots.size, currentState.occurrences)
+            val remaining = currentState.occurrences - consumed
             val newState = if (remaining <= 0) BreakState.Active else BreakState.PausedForOccurrences(remaining)
-            WatcherTickResult(updatedBreak = copy(state = newState, updatedAt = nowMillis))
+            WatcherTickResult(
+                updatedBreak = copy(state = newState, updatedAt = nowMillis),
+                firedOccurrences = missedSlots.drop(consumed).toEpochMillis(),
+            )
         }
 
         BreakState.Active -> {
-            if (schedule.nextOccurrence(anchor).isAfter(now)) return WatcherTickResult()
-            WatcherTickResult(updatedBreak = copy(updatedAt = nowMillis), firedBreakId = id)
+            val missedSlots = schedule.occurrencesBetween(anchor, now)
+            if (missedSlots.isEmpty()) return WatcherTickResult()
+            WatcherTickResult(updatedBreak = copy(updatedAt = nowMillis), firedOccurrences = missedSlots.toEpochMillis())
         }
     }
 }
+
+private fun List<LocalDateTime>.toEpochMillis(): List<Long> =
+    map { it.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() }
