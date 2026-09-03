@@ -95,6 +95,9 @@ interface BreakOccurrenceDao {
     @Query("SELECT * FROM break_occurrences WHERE completedAt IS NULL AND skippedAt IS NULL ORDER BY triggeredAt ASC LIMIT 1")
     fun getOldestPendingFlow(): Flow<BreakOccurrence?>
 
+    @Query("SELECT COUNT(*) FROM break_occurrences WHERE completedAt IS NULL AND skippedAt IS NULL")
+    suspend fun getPendingCount(): Int
+
     @Query("UPDATE break_occurrences SET completedAt = :completedAt WHERE id = :id")
     suspend fun markCompleted(id: Long, completedAt: Long)
 

@@ -56,8 +56,13 @@ fun BreakSchedule.nextOccurrence(from: LocalDateTime): LocalDateTime {
         if (!windowEnd.isAfter(windowStart)) continue
 
         val earliestOnDay = if (dayOffset == 0) maxOf(windowStart, from) else windowStart
-        val minutesPastStart = Duration.between(windowStart, earliestOnDay).toMinutes()
-        val stepsPassed = (minutesPastStart + step - 1) / step
+        // Ceiling-divide in millis, not minutes — truncating to whole minutes here would silently
+        // drop any seconds already past the last step boundary, making this return a slot at or
+        // before `from` (e.g. from = 09:30:05 with a 30-min step would floor to the 09:30 slot,
+        // which is already in the past) instead of the next one strictly after it.
+        val stepMillis = step * 60_000L
+        val elapsedMillis = Duration.between(windowStart, earliestOnDay).toMillis()
+        val stepsPassed = (elapsedMillis + stepMillis - 1) / stepMillis
         val slot = windowStart.plusMinutes(stepsPassed * step)
 
         if (!slot.isAfter(windowEnd)) return slot

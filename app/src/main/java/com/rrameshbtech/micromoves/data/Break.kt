@@ -67,3 +67,23 @@ internal fun Break.evaluateForWatcherTick(now: LocalDateTime, nowMillis: Long): 
 
 private fun List<LocalDateTime>.toEpochMillis(): List<Long> =
     map { it.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() }
+
+/**
+ * The next moment this break needs re-evaluating — used to arm a single background alarm, not to
+ * decide whether it's currently due (that's [evaluateForWatcherTick]'s job once the alarm fires).
+ * [BreakState.PausedForOccurrences] anchors off [Break.updatedAt] (via
+ * [resumeOccurrenceAfterSkipping], the same helper used to compute when a pause is exhausted) —
+ * anchoring off [now] instead would under-count slots already elapsed toward exhausting the pause.
+ */
+internal fun Break.nextAlarmWakeTime(now: LocalDateTime): LocalDateTime = when (val currentState = state) {
+    BreakState.Active -> schedule.nextOccurrence(now)
+    is BreakState.PausedUntil -> Instant.ofEpochMilli(currentState.timestampMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+    is BreakState.PausedForOccurrences -> {
+        val anchor = Instant.ofEpochMilli(updatedAt).atZone(ZoneId.systemDefault()).toLocalDateTime()
+        schedule.resumeOccurrenceAfterSkipping(anchor, currentState.occurrences)
+    }
+}
+
+/** The single earliest wake time across every break, or null if there are none to wake for. */
+internal fun List<Break>.earliestAlarmWakeTime(now: LocalDateTime): LocalDateTime? =
+    minOfOrNull { it.nextAlarmWakeTime(now) }

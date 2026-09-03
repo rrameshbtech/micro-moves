@@ -11,6 +11,7 @@ import com.rrameshbtech.micromoves.data.ExerciseOutcome
 import com.rrameshbtech.micromoves.data.local.MicroMovesDatabase
 import com.rrameshbtech.micromoves.data.toPlaybackItems
 import com.rrameshbtech.micromoves.data.toResolvedSteps
+import com.rrameshbtech.micromoves.scheduling.BreakNotifier
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,6 +54,7 @@ class BreakViewModel(application: Application, private val breakOccurrenceId: Lo
             return
         }
         items = steps.toPlaybackItems()
+        BreakNotifier.cancel(getApplication())
         runTicker()
     }
 

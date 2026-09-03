@@ -7,6 +7,7 @@ import com.rrameshbtech.micromoves.data.AlertSettings
 import com.rrameshbtech.micromoves.data.Break
 import com.rrameshbtech.micromoves.data.BreakSchedule
 import com.rrameshbtech.micromoves.data.local.MicroMovesDatabase
+import com.rrameshbtech.micromoves.scheduling.BreakAlarmScheduler
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -26,6 +27,7 @@ class CustomizeBreaksViewModel(application: Application) : AndroidViewModel(appl
     fun setEnabled(breakItem: Break, enabled: Boolean) {
         viewModelScope.launch {
             dao.update(breakItem.copy(enabled = enabled, updatedAt = System.currentTimeMillis()))
+            BreakAlarmScheduler.rearm(getApplication())
         }
     }
 
@@ -34,6 +36,7 @@ class CustomizeBreaksViewModel(application: Application) : AndroidViewModel(appl
             dao.update(
                 breakItem.copy(schedule = schedule, alertSettings = alertSettings, updatedAt = System.currentTimeMillis())
             )
+            BreakAlarmScheduler.rearm(getApplication())
         }
     }
 }
