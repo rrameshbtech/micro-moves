@@ -1,6 +1,7 @@
 package com.rrameshbtech.micromoves.ui.screens
 
 import android.app.Application
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -59,14 +60,19 @@ import com.rrameshbtech.micromoves.viewmodel.BreakViewModel
 
 @Composable
 fun BreakScreen(
-    breakId: Long,
+    breakOccurrenceId: Long,
     viewModel: BreakViewModel = viewModel(
-        factory = BreakViewModel.factory(LocalContext.current.applicationContext as Application, breakId)
+        key = breakOccurrenceId.toString(),
+        factory = BreakViewModel.factory(LocalContext.current.applicationContext as Application, breakOccurrenceId)
     ),
     onDone: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    BackHandler(enabled = true) {
+        viewModel.abandonPlayback()
+        onDone()
+    }
     BreakContent(
         uiState = uiState,
         onSkipExercise = viewModel::skipCurrentExercise,

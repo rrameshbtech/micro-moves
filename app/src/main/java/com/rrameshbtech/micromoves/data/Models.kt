@@ -86,6 +86,16 @@ data class ResolvedRoutineStep(
     val pauseAfterStep: Boolean,
 )
 
+/**
+ * Resolves a [BreakOccurrence] snapshot's ordered exercise ids against a lookup map, preserving
+ * snapshot order and silently dropping any id no longer present (e.g. exercise deleted since the
+ * occurrence fired) rather than crashing playback.
+ */
+internal fun List<Long>.toResolvedSteps(exercisesById: Map<Long, Exercise>): List<ResolvedRoutineStep> =
+    mapIndexedNotNull { index, exerciseId ->
+        exercisesById[exerciseId]?.let { exercise -> ResolvedRoutineStep(exercise, position = index, pauseAfterStep = false) }
+    }
+
 data class BreakRoutine(
     val breakItem: Break,
     val steps: List<ResolvedRoutineStep>,
@@ -105,11 +115,11 @@ sealed class BreakPlaybackItem {
 }
 
 /**
- * Flattens a routine into an ordered playback list: an intro before every exercise except
- * the first, then that exercise's slides, then a terminal [BreakPlaybackItem.Congrats].
+ * Flattens an ordered list of routine steps into a playback list: an intro before every
+ * exercise except the first, then that exercise's slides, then a terminal [BreakPlaybackItem.Congrats].
  */
-fun BreakRoutine.toPlaybackItems(): List<BreakPlaybackItem> = buildList {
-    steps.forEachIndexed { exerciseIndex, step ->
+fun List<ResolvedRoutineStep>.toPlaybackItems(): List<BreakPlaybackItem> = buildList {
+    this@toPlaybackItems.forEachIndexed { exerciseIndex, step ->
         if (exerciseIndex > 0) add(BreakPlaybackItem.ExerciseIntro(step.exercise.name, exerciseIndex))
         step.exercise.slides.forEachIndexed { slideIndex, slide ->
             add(

@@ -12,21 +12,19 @@ class BreakRoutineToPlaybackItemsTest {
         slides = List(slideCount) { Slide(description = "step $it") },
     )
 
-    private fun routine(vararg exercises: Exercise) = BreakRoutine(
-        breakItem = Break(name = "Test Break"),
-        steps = exercises.mapIndexed { index, exercise -> ResolvedRoutineStep(exercise, index, false) },
-    )
+    private fun steps(vararg exercises: Exercise): List<ResolvedRoutineStep> =
+        exercises.mapIndexed { index, exercise -> ResolvedRoutineStep(exercise, index, false) }
 
     @Test
     fun noIntroBeforeFirstExercise() {
-        val items = routine(exercise(1, "Neck Stretches", 3)).toPlaybackItems()
+        val items = steps(exercise(1, "Neck Stretches", 3)).toPlaybackItems()
 
         assertTrue(items.first() is BreakPlaybackItem.SlideItem)
     }
 
     @Test
     fun oneIntroPerSubsequentExercise() {
-        val items = routine(
+        val items = steps(
             exercise(1, "Neck Stretches", 2),
             exercise(2, "Shoulder Rolls", 3),
             exercise(3, "Stand & Walk", 1),
@@ -38,14 +36,14 @@ class BreakRoutineToPlaybackItemsTest {
 
     @Test
     fun congratsIsAlwaysLast() {
-        val items = routine(exercise(1, "Neck Stretches", 2)).toPlaybackItems()
+        val items = steps(exercise(1, "Neck Stretches", 2)).toPlaybackItems()
 
         assertTrue(items.last() is BreakPlaybackItem.Congrats)
     }
 
     @Test
     fun slideCountMatchesSumOfExerciseSlides() {
-        val items = routine(
+        val items = steps(
             exercise(1, "Neck Stretches", 2),
             exercise(2, "Shoulder Rolls", 3),
         ).toPlaybackItems()

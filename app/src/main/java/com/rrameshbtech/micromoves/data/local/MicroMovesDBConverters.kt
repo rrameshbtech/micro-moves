@@ -53,4 +53,11 @@ class MicroMovesDBConverters {
     @TypeConverter
     fun toSlideList(value: String): List<Slide> =
         Gson().fromJson(value, object : TypeToken<List<Slide>>() {}.type) ?: emptyList()
+
+    @TypeConverter
+    fun fromLongList(ids: List<Long>): String = Gson().toJson(ids)
+
+    @TypeConverter
+    fun toLongList(value: String): List<Long> =
+        Gson().fromJson(value, object : TypeToken<List<Long>>() {}.type) ?: emptyList()
 }

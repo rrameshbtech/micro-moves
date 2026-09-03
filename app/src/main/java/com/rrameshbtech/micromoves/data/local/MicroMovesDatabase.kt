@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Break::class, Exercise::class, RoutineStep::class, BreakOccurrence::class, ExerciseOccurrence::class],
-    version = 4,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(MicroMovesDBConverters::class)
@@ -72,6 +72,27 @@ abstract class MicroMovesDatabase : RoomDatabase() {
                 }
             }
         }
+    }
+}
+
+/**
+ * Snapshots a break's current live routine into a new [BreakOccurrence] row (breakId + ordered
+ * exercise ids at fire time), replacing any still-pending (unshown/unfinished) occurrence for the
+ * same break rather than accumulating one — this is what caps "at most one pending occurrence per
+ * breakId" regardless of how it was triggered. The single call site for occurrence creation, used
+ * by both the watcher (schedule fires) and the manual long-press flow.
+ */
+suspend fun MicroMovesDatabase.createBreakOccurrenceSnapshot(breakId: Long): BreakOccurrence? {
+    val routine = getBreakRoutine(breakId) ?: return null
+    if (routine.steps.isEmpty()) return null
+    return withTransaction {
+        breakOccurrenceDao().getPendingForBreak(breakId)?.let { stale -> breakOccurrenceDao().deleteById(stale.id) }
+        val occurrence = BreakOccurrence(
+            breakId = breakId,
+            triggeredAt = System.currentTimeMillis(),
+            exerciseIds = routine.steps.map { it.exercise.id },
+        )
+        occurrence.copy(id = breakOccurrenceDao().insert(occurrence))
     }
 }
 

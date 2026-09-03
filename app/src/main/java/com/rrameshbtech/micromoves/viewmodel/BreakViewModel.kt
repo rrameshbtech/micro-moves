@@ -5,13 +5,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.rrameshbtech.micromoves.data.BreakOccurrence
 import com.rrameshbtech.micromoves.data.BreakPlaybackItem
 import com.rrameshbtech.micromoves.data.ExerciseOccurrence
 import com.rrameshbtech.micromoves.data.ExerciseOutcome
 import com.rrameshbtech.micromoves.data.local.MicroMovesDatabase
-import com.rrameshbtech.micromoves.data.local.getBreakRoutine
 import com.rrameshbtech.micromoves.data.toPlaybackItems
+import com.rrameshbtech.micromoves.data.toResolvedSteps
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +23,7 @@ sealed class BreakUiState {
     data class Playing(val item: BreakPlaybackItem, val elapsedMs: Long, val durationMs: Long) : BreakUiState()
 }
 
-class BreakViewModel(application: Application, private val breakId: Long) : AndroidViewModel(application) {
+class BreakViewModel(application: Application, private val breakOccurrenceId: Long) : AndroidViewModel(application) {
 
     private val database = MicroMovesDatabase.getDatabase(application)
 
@@ -32,7 +31,6 @@ class BreakViewModel(application: Application, private val breakId: Long) : Andr
     val uiState: StateFlow<BreakUiState> = _uiState.asStateFlow()
 
     private var items: List<BreakPlaybackItem> = emptyList()
-    private var breakOccurrenceId = 0L
     private var currentIndex = 0
     private var elapsedMs = 0L
     private var exerciseElapsedMs = 0L
@@ -42,14 +40,18 @@ class BreakViewModel(application: Application, private val breakId: Long) : Andr
     }
 
     private suspend fun startPlayback() {
-        val routine = database.getBreakRoutine(breakId)
-        if (routine == null || routine.steps.isEmpty()) {
+        val occurrence = database.breakOccurrenceDao().getById(breakOccurrenceId)
+        if (occurrence == null) {
             _uiState.value = BreakUiState.NotFound
             return
         }
-        items = routine.toPlaybackItems()
-        breakOccurrenceId = database.breakOccurrenceDao()
-            .insert(BreakOccurrence(breakId = breakId, triggeredAt = System.currentTimeMillis()))
+        val exercisesById = database.exerciseDao().getExercisesByIds(occurrence.exerciseIds).associateBy { it.id }
+        val steps = occurrence.exerciseIds.toResolvedSteps(exercisesById)
+        if (steps.isEmpty()) {
+            _uiState.value = BreakUiState.NotFound
+            return
+        }
+        items = steps.toPlaybackItems()
         runTicker()
     }
 
@@ -59,7 +61,10 @@ class BreakViewModel(application: Application, private val breakId: Long) : Andr
             val durationMs = durationForItem(item)
             _uiState.value = BreakUiState.Playing(item, elapsedMs, durationMs)
 
-            if (item is BreakPlaybackItem.Congrats) return
+            if (item is BreakPlaybackItem.Congrats) {
+                markCompleted()
+                return
+            }
 
             if (elapsedMs >= durationMs) {
                 if (item is BreakPlaybackItem.SlideItem && item.isLastSlideOfExercise) {
@@ -89,10 +94,19 @@ class BreakViewModel(application: Application, private val breakId: Long) : Andr
         }
     }
 
+    /** Back-out-without-finishing: marks the occurrence done so it doesn't loop back via auto-show. */
+    fun abandonPlayback() {
+        viewModelScope.launch { markCompleted() }
+    }
+
     private fun moveToIndex(index: Int) {
         currentIndex = index
         elapsedMs = 0L
         exerciseElapsedMs = 0L
+    }
+
+    private suspend fun markCompleted() {
+        database.breakOccurrenceDao().markCompleted(breakOccurrenceId, System.currentTimeMillis())
     }
 
     private suspend fun recordExerciseOccurrence(exerciseId: Long, exerciseIndex: Int, outcome: ExerciseOutcome) {
@@ -118,11 +132,11 @@ class BreakViewModel(application: Application, private val breakId: Long) : Andr
         private const val INTER_SLIDE_PAUSE_MS = 1_000L
         private const val INTRO_DURATION_MS = 3_000L
 
-        fun factory(application: Application, breakId: Long): ViewModelProvider.Factory =
+        fun factory(application: Application, breakOccurrenceId: Long): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    BreakViewModel(application, breakId) as T
+                    BreakViewModel(application, breakOccurrenceId) as T
             }
     }
 }

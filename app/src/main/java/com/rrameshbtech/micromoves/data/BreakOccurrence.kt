@@ -17,4 +17,6 @@ data class BreakOccurrence(
     val id: Long = 0,
     val breakId: Long,
     val triggeredAt: Long,
+    val exerciseIds: List<Long> = emptyList(),
+    val completedAt: Long? = null,
 )
