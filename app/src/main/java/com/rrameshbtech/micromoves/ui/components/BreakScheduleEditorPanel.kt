@@ -45,7 +45,7 @@ import com.rrameshbtech.micromoves.ui.theme.SecondaryForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.SecondaryLight
 import java.time.DayOfWeek
 
-private const val FREQUENCY_STEP_MINUTES = 30
+private const val FREQUENCY_STEP_MINUTES = 15
 private const val MIN_FREQUENCY_MINUTES = 30
 private const val MAX_FREQUENCY_MINUTES = 480
 
@@ -285,8 +285,9 @@ private fun formatHourLabel(hour: Int): String {
     return "$displayHour $period"
 }
 
-private fun formatFrequencyStepperLabel(minutes: Int): String = when {
-    minutes < 60 -> "$minutes min"
-    minutes % 60 == 0 -> "${minutes / 60} hr"
-    else -> "$minutes min"
+internal fun formatFrequencyStepperLabel(minutes: Int): String {
+    if (minutes < 60) return "$minutes min"
+    val hours = minutes / 60
+    val remainderMinutes = minutes % 60
+    return if (remainderMinutes == 0) "$hours hr" else "$hours hr $remainderMinutes min"
 }

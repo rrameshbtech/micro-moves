@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,6 +44,7 @@ import com.rrameshbtech.micromoves.data.Break
 import com.rrameshbtech.micromoves.data.BreakSchedule
 import com.rrameshbtech.micromoves.data.DaysOfWeek
 import com.rrameshbtech.micromoves.ui.components.BreakScheduleEditorPanel
+import com.rrameshbtech.micromoves.ui.components.formatFrequencyStepperLabel
 import com.rrameshbtech.micromoves.ui.components.ToggleSwitch
 import com.rrameshbtech.micromoves.ui.theme.BackgroundLight
 import com.rrameshbtech.micromoves.ui.theme.BorderLight
@@ -89,6 +91,7 @@ private fun CustomizeBreaksContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(BackgroundLight)
+                    .statusBarsPadding()
                     .padding(horizontal = 12.dp, vertical = 12.dp)
             ) {
                 IconButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterStart).size(48.dp)) {
@@ -99,11 +102,12 @@ private fun CustomizeBreaksContent(
                     )
                 }
                 Text(
-                    text = "Customize Breaks",
-                    modifier = Modifier.align(Alignment.Center),
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = CardForegroundLight,
+                    text = activeBreaksStatusMessage(breaks),
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 8.dp),
+                    fontSize = 16.sp,
+                    color = MutedForegroundLight,
                 )
             }
         },
@@ -131,6 +135,9 @@ private fun CustomizeBreaksContent(
         }
     }
 }
+
+private fun activeBreaksStatusMessage(breaks: List<Break>): String =
+    if (breaks.isNotEmpty()) "${breaks.count { it.enabled }} of ${breaks.size} active ${if (breaks.size > 1) "breaks" else "break"}" else "No breaks found"
 
 @Composable
 fun CustomizeBreakCard(
@@ -212,11 +219,7 @@ private fun joinScheduleClauses(clauses: List<String>): String {
     return daysClause + " • " + rest.joinToString(", ")
 }
 
-private fun formatFrequencyClause(minutes: Int): String = when {
-    minutes < 60 -> "Every $minutes min"
-    minutes % 60 == 0 -> "Every ${minutes / 60} hr"
-    else -> "Every $minutes min"
-}
+private fun formatFrequencyClause(minutes: Int): String = "Every ${formatFrequencyStepperLabel(minutes)}"
 
 private fun formatHoursClause(startHour: Int, endHour: Int): String? {
     if (startHour == 0 && endHour == 23) return null
