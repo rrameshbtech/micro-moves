@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Break::class, Exercise::class, RoutineStep::class, BreakOccurrence::class, ExerciseOccurrence::class],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 @TypeConverters(MicroMovesDBConverters::class)
@@ -108,6 +108,13 @@ suspend fun MicroMovesDatabase.createBreakOccurrenceSnapshots(breakId: Long, tri
 
 suspend fun MicroMovesDatabase.createBreakOccurrenceSnapshot(breakId: Long): BreakOccurrence? =
     createBreakOccurrenceSnapshots(breakId, listOf(System.currentTimeMillis())).lastOrNull()
+
+/** Inserts a new break and its ordered routine steps in one transaction. Returns the new break's id. */
+suspend fun MicroMovesDatabase.createBreak(newBreak: Break, exerciseIds: List<Long>): Long = withTransaction {
+    val breakId = breakDao().insert(newBreak)
+    routineStepDao().insertAll(exerciseIds.mapIndexed { index, exerciseId -> RoutineStep(breakId, exerciseId, index) })
+    breakId
+}
 
 suspend fun MicroMovesDatabase.getBreakRoutine(breakId: Long): BreakRoutine? {
     val breakEntity = breakDao().getBreakById(breakId) ?: return null

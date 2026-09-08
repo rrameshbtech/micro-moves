@@ -20,6 +20,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -50,8 +51,11 @@ private const val MIN_FREQUENCY_MINUTES = 30
 private const val MAX_FREQUENCY_MINUTES = 480
 
 /**
- * Local edit state seeded from [schedule]/[alertSettings] and only committed via [onSave] —
- * [onCancel] simply drops this composable from composition, discarding whatever was edited.
+ * Local edit state seeded from [schedule]/[alertSettings]. With [showActions] (the default), edits
+ * are only committed via [onSave] — [onCancel] simply drops this composable from composition,
+ * discarding whatever was edited. With [showActions] = false, the Save/Cancel row is hidden and
+ * [onChange] instead fires immediately on every control change, for callers that commit the value
+ * elsewhere (e.g. a screen-level "Create"/"Save" action) rather than inline in this panel.
  */
 @Composable
 fun BreakScheduleEditorPanel(
@@ -60,6 +64,8 @@ fun BreakScheduleEditorPanel(
     onCancel: () -> Unit,
     onSave: (BreakSchedule, AlertSettings) -> Unit,
     modifier: Modifier = Modifier,
+    showActions: Boolean = true,
+    onChange: ((BreakSchedule, AlertSettings) -> Unit)? = null,
 ) {
     var frequencyMinutes by remember { mutableIntStateOf(schedule.frequencyMinutes) }
     var startHour by remember { mutableIntStateOf(schedule.activeStartHour) }
@@ -67,6 +73,10 @@ fun BreakScheduleEditorPanel(
     var days by remember { mutableStateOf(schedule.daysOfWeek) }
     var chimeEnabled by remember { mutableStateOf(alertSettings.chimeEnabled) }
     var vibrationEnabled by remember { mutableStateOf(alertSettings.vibrationEnabled) }
+
+    LaunchedEffect(frequencyMinutes, startHour, endHour, days, chimeEnabled, vibrationEnabled) {
+        onChange?.invoke(BreakSchedule(frequencyMinutes, startHour, endHour, days), AlertSettings(chimeEnabled, vibrationEnabled))
+    }
 
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Text(text = "Every", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = CardForegroundLight)
@@ -122,26 +132,28 @@ fun BreakScheduleEditorPanel(
             }
         }
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(
-                onClick = onCancel,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Text(text = "Cancel", fontSize = 15.sp, fontWeight = FontWeight.Medium)
-            }
-            Button(
-                onClick = {
-                    onSave(
-                        BreakSchedule(frequencyMinutes, startHour, endHour, days),
-                        AlertSettings(chimeEnabled, vibrationEnabled),
-                    )
-                },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryLight, contentColor = PrimaryForegroundLight),
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Text(text = "Save", fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        if (showActions) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(
+                    onClick = onCancel,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text(text = "Cancel", fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                }
+                Button(
+                    onClick = {
+                        onSave(
+                            BreakSchedule(frequencyMinutes, startHour, endHour, days),
+                            AlertSettings(chimeEnabled, vibrationEnabled),
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryLight, contentColor = PrimaryForegroundLight),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text(text = "Save", fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                }
             }
         }
     }

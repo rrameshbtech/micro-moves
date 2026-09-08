@@ -18,6 +18,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
@@ -54,6 +57,8 @@ import com.rrameshbtech.micromoves.ui.theme.ForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.MicroMovesTheme
 import com.rrameshbtech.micromoves.ui.theme.MutedForegroundLight
 import com.rrameshbtech.micromoves.ui.theme.MutedLight
+import com.rrameshbtech.micromoves.ui.theme.PrimaryForegroundLight
+import com.rrameshbtech.micromoves.ui.theme.PrimaryLight
 import com.rrameshbtech.micromoves.viewmodel.CustomizeBreaksViewModel
 import java.time.DayOfWeek
 
@@ -61,12 +66,14 @@ import java.time.DayOfWeek
 fun CustomizeBreaksScreen(
     viewModel: CustomizeBreaksViewModel = viewModel(),
     onBack: () -> Unit = {},
+    onNewBreak: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val breaks by viewModel.breaks.collectAsState()
     CustomizeBreaksContent(
         breaks = breaks,
         onBack = onBack,
+        onNewBreak = onNewBreak,
         onToggleEnabled = viewModel::setEnabled,
         onSaveSettings = viewModel::updateSettings,
         modifier = modifier,
@@ -77,6 +84,7 @@ fun CustomizeBreaksScreen(
 private fun CustomizeBreaksContent(
     breaks: List<Break>,
     onBack: () -> Unit = {},
+    onNewBreak: () -> Unit = {},
     onToggleEnabled: (Break, Boolean) -> Unit = { _, _ -> },
     onSaveSettings: (Break, BreakSchedule, AlertSettings) -> Unit = { _, _, _ -> },
     modifier: Modifier = Modifier,
@@ -86,6 +94,24 @@ private fun CustomizeBreaksContent(
             .fillMaxSize()
             .background(BackgroundLight),
         containerColor = BackgroundLight,
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = BackgroundLight, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                    .padding(24.dp)
+            ) {
+                Button(
+                    onClick = onNewBreak,
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryLight, contentColor = PrimaryForegroundLight),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                    Text(text = "New Break", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        },
         topBar = {
             Box(
                 modifier = Modifier

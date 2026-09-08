@@ -30,6 +30,7 @@ import com.rrameshbtech.micromoves.scheduling.BreakAlarmScheduler
 import com.rrameshbtech.micromoves.scheduling.BreakNotifier
 import com.rrameshbtech.micromoves.ui.screens.BreakScreen
 import com.rrameshbtech.micromoves.ui.screens.BreaksListScreen
+import com.rrameshbtech.micromoves.ui.screens.CreateBreakScreen
 import com.rrameshbtech.micromoves.ui.screens.CustomizeBreaksScreen
 import com.rrameshbtech.micromoves.ui.theme.MicroMovesTheme
 import com.rrameshbtech.micromoves.viewmodel.MainViewModel
@@ -84,12 +85,13 @@ class MainActivity : ComponentActivity() {
                 val scope = rememberCoroutineScope()
 
                 var showCustomize by remember { mutableStateOf(false) }
+                var showCreateBreak by remember { mutableStateOf(false) }
                 var activeBreakOccurrenceId by remember { mutableStateOf<Long?>(null) }
 
                 // Auto-show: only when nothing is currently playing and the user isn't mid-edit
-                // on CustomizeBreaksScreen — it reappears the moment they back out to the list.
-                LaunchedEffect(pendingOccurrenceId, showCustomize, activeBreakOccurrenceId) {
-                    if (activeBreakOccurrenceId == null && !showCustomize && pendingOccurrenceId != null) {
+                // on CustomizeBreaksScreen/CreateBreakScreen — it reappears once they back out.
+                LaunchedEffect(pendingOccurrenceId, showCustomize, showCreateBreak, activeBreakOccurrenceId) {
+                    if (activeBreakOccurrenceId == null && !showCustomize && !showCreateBreak && pendingOccurrenceId != null) {
                         activeBreakOccurrenceId = pendingOccurrenceId
                     }
                 }
@@ -104,7 +106,8 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                BackHandler(enabled = showCustomize) { showCustomize = false }
+                BackHandler(enabled = showCreateBreak) { showCreateBreak = false }
+                BackHandler(enabled = showCustomize && !showCreateBreak) { showCustomize = false }
 
                 when {
                     activeBreakOccurrenceId != null -> BreakScreen(
@@ -112,8 +115,14 @@ class MainActivity : ComponentActivity() {
                         onDone = { activeBreakOccurrenceId = null },
                         modifier = Modifier.fillMaxSize(),
                     )
+                    showCreateBreak -> CreateBreakScreen(
+                        onBack = { showCreateBreak = false },
+                        onSaved = { showCreateBreak = false },
+                        modifier = Modifier.fillMaxSize(),
+                    )
                     showCustomize -> CustomizeBreaksScreen(
                         onBack = { showCustomize = false },
+                        onNewBreak = { showCreateBreak = true },
                         modifier = Modifier.fillMaxSize(),
                     )
                     else -> BreaksListScreen(

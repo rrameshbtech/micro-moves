@@ -13,6 +13,7 @@ data class Break(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
+    val description: String = "",
     @Embedded val schedule: BreakSchedule = BreakSchedule(),
     @Embedded val alertSettings: AlertSettings = AlertSettings(),
     val enabled: Boolean = true,
