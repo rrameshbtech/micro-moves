@@ -39,4 +39,11 @@ class CustomizeBreaksViewModel(application: Application) : AndroidViewModel(appl
             BreakAlarmScheduler.rearm(getApplication())
         }
     }
+
+    fun deleteBreak(breakItem: Break) {
+        viewModelScope.launch {
+            dao.delete(breakItem)
+            BreakAlarmScheduler.rearm(getApplication())
+        }
+    }
 }

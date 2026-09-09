@@ -20,9 +20,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -32,6 +34,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +43,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rrameshbtech.micromoves.data.AlertSettings
+import com.rrameshbtech.micromoves.data.Break
+import com.rrameshbtech.micromoves.data.BreakRoutine
 import com.rrameshbtech.micromoves.data.BreakSchedule
 import com.rrameshbtech.micromoves.data.Exercise
 import com.rrameshbtech.micromoves.ui.components.BreakScheduleEditorPanel
@@ -76,6 +82,7 @@ private const val UNTITLED_BREAK_TITLE = "[untitled break]"
 
 @Composable
 fun CreateBreakScreen(
+    breakId: Long? = null,
     viewModel: CreateBreakViewModel = viewModel(),
     onBack: () -> Unit = {},
     onSaved: () -> Unit = {},
@@ -83,12 +90,36 @@ fun CreateBreakScreen(
 ) {
     val catalog by viewModel.catalog.collectAsState()
     val scope = rememberCoroutineScope()
+    var editingRoutine by remember(breakId) { mutableStateOf<BreakRoutine?>(null) }
+    var loading by remember(breakId) { mutableStateOf(breakId != null) }
+
+    LaunchedEffect(breakId) {
+        if (breakId != null) {
+            editingRoutine = viewModel.loadForEdit(breakId)
+            loading = false
+        }
+    }
+
+    if (loading) {
+        Box(modifier = modifier.fillMaxSize().background(BackgroundLight).wrapContentSize()) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     CreateBreakContent(
         catalog = catalog,
+        initialBreak = editingRoutine?.breakItem,
+        initialExercises = editingRoutine?.steps?.map { it.exercise } ?: emptyList(),
         onBack = onBack,
-        onCreate = { name, description, schedule, alertSettings, exerciseIds ->
+        onSave = { name, description, schedule, alertSettings, exerciseIds ->
             scope.launch {
-                viewModel.createBreak(name, description, schedule, alertSettings, exerciseIds)
+                val original = editingRoutine?.breakItem
+                if (original != null) {
+                    viewModel.updateBreak(original, name, description, schedule, alertSettings, exerciseIds)
+                } else {
+                    viewModel.createBreak(name, description, schedule, alertSettings, exerciseIds)
+                }
                 onSaved()
             }
         },
@@ -99,22 +130,28 @@ fun CreateBreakScreen(
 @Composable
 private fun CreateBreakContent(
     catalog: List<Exercise>,
+    initialBreak: Break? = null,
+    initialExercises: List<Exercise> = emptyList(),
     onBack: () -> Unit = {},
-    onCreate: (String, String, BreakSchedule, AlertSettings, List<Long>) -> Unit = { _, _, _, _, _ -> },
+    onSave: (String, String, BreakSchedule, AlertSettings, List<Long>) -> Unit = { _, _, _, _, _ -> },
     modifier: Modifier = Modifier,
 ) {
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var selected by remember { mutableStateOf(listOf<Exercise>()) }
-    var schedule by remember { mutableStateOf(BreakSchedule()) }
-    var alertSettings by remember { mutableStateOf(AlertSettings()) }
+    val isEditing = initialBreak != null
+    var name by remember { mutableStateOf(initialBreak?.name ?: "") }
+    var description by remember { mutableStateOf(initialBreak?.description ?: "") }
+    var selected by remember { mutableStateOf(initialExercises) }
+    var schedule by remember { mutableStateOf(initialBreak?.schedule ?: BreakSchedule()) }
+    var alertSettings by remember { mutableStateOf(initialBreak?.alertSettings ?: AlertSettings()) }
     var showDiscardDialog by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
     val availableExercises = catalog.filterNot { exercise -> selected.any { it.id == exercise.id } }
-    val hasUnsavedChanges = name.isNotBlank() || description.isNotBlank() || selected.isNotEmpty() ||
-        schedule != BreakSchedule() || alertSettings != AlertSettings()
+    val hasUnsavedChanges = name != (initialBreak?.name ?: "") ||
+        description != (initialBreak?.description ?: "") ||
+        selected.map { it.id } != initialExercises.map { it.id } ||
+        schedule != (initialBreak?.schedule ?: BreakSchedule()) ||
+        alertSettings != (initialBreak?.alertSettings ?: AlertSettings())
     val requestBack = { if (hasUnsavedChanges) showDiscardDialog = true else onBack() }
 
     BackHandler(onBack = requestBack)
@@ -198,14 +235,18 @@ private fun CreateBreakContent(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
-                        onClick = { onCreate(name.trim(), description.trim(), schedule, alertSettings, selected.map { it.id }) },
+                        onClick = { onSave(name.trim(), description.trim(), schedule, alertSettings, selected.map { it.id }) },
                         enabled = name.isNotBlank() && selected.isNotEmpty(),
                         modifier = Modifier.fillMaxWidth().height(60.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryLight, contentColor = PrimaryForegroundLight),
                         shape = RoundedCornerShape(16.dp),
                     ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                        Text(text = "Create Break", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                        Icon(
+                            imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp),
+                        )
+                        Text(text = if (isEditing) "Save Changes" else "Create Break", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

@@ -116,6 +116,13 @@ suspend fun MicroMovesDatabase.createBreak(newBreak: Break, exerciseIds: List<Lo
     breakId
 }
 
+/** Updates an existing break and replaces its routine steps with [exerciseIds], in order, in one transaction. */
+suspend fun MicroMovesDatabase.updateBreak(updatedBreak: Break, exerciseIds: List<Long>): Unit = withTransaction {
+    breakDao().update(updatedBreak)
+    routineStepDao().clearForBreak(updatedBreak.id)
+    routineStepDao().insertAll(exerciseIds.mapIndexed { index, exerciseId -> RoutineStep(updatedBreak.id, exerciseId, index) })
+}
+
 suspend fun MicroMovesDatabase.getBreakRoutine(breakId: Long): BreakRoutine? {
     val breakEntity = breakDao().getBreakById(breakId) ?: return null
     return withTransaction {

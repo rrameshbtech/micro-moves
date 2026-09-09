@@ -86,12 +86,13 @@ class MainActivity : ComponentActivity() {
 
                 var showCustomize by remember { mutableStateOf(false) }
                 var showCreateBreak by remember { mutableStateOf(false) }
+                var editBreakId by remember { mutableStateOf<Long?>(null) }
                 var activeBreakOccurrenceId by remember { mutableStateOf<Long?>(null) }
 
                 // Auto-show: only when nothing is currently playing and the user isn't mid-edit
                 // on CustomizeBreaksScreen/CreateBreakScreen — it reappears once they back out.
-                LaunchedEffect(pendingOccurrenceId, showCustomize, showCreateBreak, activeBreakOccurrenceId) {
-                    if (activeBreakOccurrenceId == null && !showCustomize && !showCreateBreak && pendingOccurrenceId != null) {
+                LaunchedEffect(pendingOccurrenceId, showCustomize, showCreateBreak, editBreakId, activeBreakOccurrenceId) {
+                    if (activeBreakOccurrenceId == null && !showCustomize && !showCreateBreak && editBreakId == null && pendingOccurrenceId != null) {
                         activeBreakOccurrenceId = pendingOccurrenceId
                     }
                 }
@@ -106,13 +107,20 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                BackHandler(enabled = editBreakId != null) { editBreakId = null }
                 BackHandler(enabled = showCreateBreak) { showCreateBreak = false }
-                BackHandler(enabled = showCustomize && !showCreateBreak) { showCustomize = false }
+                BackHandler(enabled = showCustomize && !showCreateBreak && editBreakId == null) { showCustomize = false }
 
                 when {
                     activeBreakOccurrenceId != null -> BreakScreen(
                         breakOccurrenceId = activeBreakOccurrenceId!!,
                         onDone = { activeBreakOccurrenceId = null },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    editBreakId != null -> CreateBreakScreen(
+                        breakId = editBreakId,
+                        onBack = { editBreakId = null },
+                        onSaved = { editBreakId = null },
                         modifier = Modifier.fillMaxSize(),
                     )
                     showCreateBreak -> CreateBreakScreen(
@@ -123,6 +131,7 @@ class MainActivity : ComponentActivity() {
                     showCustomize -> CustomizeBreaksScreen(
                         onBack = { showCustomize = false },
                         onNewBreak = { showCreateBreak = true },
+                        onEditBreak = { breakItem -> editBreakId = breakItem.id },
                         modifier = Modifier.fillMaxSize(),
                     )
                     else -> BreaksListScreen(
